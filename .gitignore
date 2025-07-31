@@ -7,3 +7,12 @@ xaienv/
 # Large model files (if any)
 models/*.pkl
 models/rf_baseline.pkl
+
+# XAI Thesis specific exclusions
+"XAIThesis /.idea/"
+"XAIThesis /Project/.XAIenv/"
+"XAIThesis /Project/db.sqlite3"
+*/.DS_Store
+__pycache__/
+*.pyc
+*.pyo
