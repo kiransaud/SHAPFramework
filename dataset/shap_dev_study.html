@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html><head><meta charset='utf-8'><title>Developer Study Interactive Vignette</title>
+<style>
+body{font-family:Consolas,Menlo,monospace;background:#f2f4f8;margin:0;padding:0;}
+.container{max-width:1000px;margin:40px auto;padding:20px;background:#fff;border-radius:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+h1{font-size:24px;margin-bottom:16px;}
+.code{background:#272822;color:#f8f8f2;padding:16px;border-radius:6px;overflow-x:auto;}
+.code-line{white-space:pre;cursor:pointer;}
+.lineno{display:inline-block;width:32px;color:#75715e;user-select:none;}
+.selected{background:#49483e !important;}
+.question{margin:20px 0;font-size:16px;}
+button{padding:10px 20px;font-size:16px;border:none;border-radius:4px;background:#007acc;color:#fff;cursor:pointer;}
+button:disabled{background:#9db9d1;cursor:not-allowed;}
+.highlighted{font-weight:bold;}
+</style></head><body>
+<div class='container'>
+<h1>Developer Study – Bug Localization Task</h1>
+<div id='baselineSection'>
+<p>The model predicts this file is <span style='color:#e06c75;font-weight:bold;'>BUGGY</span>.</p>
+<div class='question'>Q1. Click the <span class='highlighted'>single line</span> you believe is the root cause.</div>
+<div class='code' id='baselineCode'>
+<div class='code-line' data-lineno='1'><span class='lineno'> 1</span>def apply_discount(items, discount_pct):</div>
+<div class='code-line' data-lineno='2'><span class='lineno'> 2</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='3'><span class='lineno'> 3</span>    Return a new list with the discount applied.</div>
+<div class='code-line' data-lineno='4'><span class='lineno'> 4</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='5'><span class='lineno'> 5</span>    discounted = []</div>
+<div class='code-line' data-lineno='6'><span class='lineno'> 6</span>    for i in range(len(items) - 1):    # BUG: last item never processed</div>
+<div class='code-line' data-lineno='7'><span class='lineno'> 7</span>        price, id_ = items[i][&quot;price&quot;], items[i][&quot;id&quot;]</div>
+<div class='code-line' data-lineno='8'><span class='lineno'> 8</span>        new_price = round(price * (1 - discount_pct / 100), 2)</div>
+<div class='code-line' data-lineno='9'><span class='lineno'> 9</span>        discounted.append({&quot;id&quot;: id_, &quot;price&quot;: new_price})</div>
+<div class='code-line' data-lineno='10'><span class='lineno'>10</span>    return discounted</div>
+<div class='code-line' data-lineno='11'><span class='lineno'>11</span></div>
+<div class='code-line' data-lineno='12'><span class='lineno'>12</span># failing unit test</div>
+<div class='code-line' data-lineno='13'><span class='lineno'>13</span>if __name__ == &quot;__main__&quot;:</div>
+<div class='code-line' data-lineno='14'><span class='lineno'>14</span>    cart = [{&quot;id&quot;: 1, &quot;price&quot;: 10.0}, {&quot;id&quot;: 2, &quot;price&quot;: 20.0}]</div>
+<div class='code-line' data-lineno='15'><span class='lineno'>15</span>    out = apply_discount(cart, 10)</div>
+<div class='code-line' data-lineno='16'><span class='lineno'>16</span>    assert len(out) == 2  # fails</div>
+</div>
+<div class='question'>Why do you think this line is the root cause? (optional)</div>
+<textarea id='baselineReason' rows='3' style='width:100%;'></textarea>
+<br><br><button id='toShapBtn' disabled>Next &raquo;</button>
+</div>
+<div id='shapSection' style='display:none;'>
+<p>The same file is now shown with <span style='color:#e06c75;font-weight:bold;'>SHAP</span> explanation overlay.</p>
+<div class='code' id='shapCode'>
+<div class='code-line' data-lineno='1' style='background:transparent;'><span class='lineno'> 1</span>def apply_discount(items, discount_pct):</div>
+<div class='code-line' data-lineno='2' style='background:transparent;'><span class='lineno'> 2</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='3' style='background:transparent;'><span class='lineno'> 3</span>    Return a new list with the discount applied.</div>
+<div class='code-line' data-lineno='4' style='background:transparent;'><span class='lineno'> 4</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='5' style='background:transparent;'><span class='lineno'> 5</span>    discounted = []</div>
+<div class='code-line' data-lineno='6' style='background:rgba(255,0,0,0.80);'><span class='lineno'> 6</span>    for i in range(len(items) - 1):    # BUG: last item never processed</div>
+<div class='code-line' data-lineno='7' style='background:rgba(255,0,0,0.39);'><span class='lineno'> 7</span>        price, id_ = items[i][&quot;price&quot;], items[i][&quot;id&quot;]</div>
+<div class='code-line' data-lineno='8' style='background:rgba(255,0,0,0.26);'><span class='lineno'> 8</span>        new_price = round(price * (1 - discount_pct / 100), 2)</div>
+<div class='code-line' data-lineno='9' style='background:rgba(255,0,0,0.22);'><span class='lineno'> 9</span>        discounted.append({&quot;id&quot;: id_, &quot;price&quot;: new_price})</div>
+<div class='code-line' data-lineno='10' style='background:transparent;'><span class='lineno'>10</span>    return discounted</div>
+<div class='code-line' data-lineno='11' style='background:transparent;'><span class='lineno'>11</span></div>
+<div class='code-line' data-lineno='12' style='background:transparent;'><span class='lineno'>12</span># failing unit test</div>
+<div class='code-line' data-lineno='13' style='background:transparent;'><span class='lineno'>13</span>if __name__ == &quot;__main__&quot;:</div>
+<div class='code-line' data-lineno='14' style='background:transparent;'><span class='lineno'>14</span>    cart = [{&quot;id&quot;: 1, &quot;price&quot;: 10.0}, {&quot;id&quot;: 2, &quot;price&quot;: 20.0}]</div>
+<div class='code-line' data-lineno='15' style='background:transparent;'><span class='lineno'>15</span>    out = apply_discount(cart, 10)</div>
+<div class='code-line' data-lineno='16' style='background:transparent;'><span class='lineno'>16</span>    assert len(out) == 2  # fails</div>
+</div>
+<div class='question'>Local explanation (top contributing lines):</div>
+<ul>
+<li>Line 6 &mdash; SHAP |value| = 0.68</li>
+<li>Line 7 &mdash; SHAP |value| = 0.22</li>
+<li>Line 8 &mdash; SHAP |value| = 0.07</li>
+</ul>
+<div class='question'>Q2. After seeing the explanation, which line do you now believe is the root cause?</div>
+<div class='code' id='shapSelection'>
+<div class='code-line' data-lineno='1'><span class='lineno'> 1</span>def apply_discount(items, discount_pct):</div>
+<div class='code-line' data-lineno='2'><span class='lineno'> 2</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='3'><span class='lineno'> 3</span>    Return a new list with the discount applied.</div>
+<div class='code-line' data-lineno='4'><span class='lineno'> 4</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='5'><span class='lineno'> 5</span>    discounted = []</div>
+<div class='code-line' data-lineno='6'><span class='lineno'> 6</span>    for i in range(len(items) - 1):    # BUG: last item never processed</div>
+<div class='code-line' data-lineno='7'><span class='lineno'> 7</span>        price, id_ = items[i][&quot;price&quot;], items[i][&quot;id&quot;]</div>
+<div class='code-line' data-lineno='8'><span class='lineno'> 8</span>        new_price = round(price * (1 - discount_pct / 100), 2)</div>
+<div class='code-line' data-lineno='9'><span class='lineno'> 9</span>        discounted.append({&quot;id&quot;: id_, &quot;price&quot;: new_price})</div>
+<div class='code-line' data-lineno='10'><span class='lineno'>10</span>    return discounted</div>
+<div class='code-line' data-lineno='11'><span class='lineno'>11</span></div>
+<div class='code-line' data-lineno='12'><span class='lineno'>12</span># failing unit test</div>
+<div class='code-line' data-lineno='13'><span class='lineno'>13</span>if __name__ == &quot;__main__&quot;:</div>
+<div class='code-line' data-lineno='14'><span class='lineno'>14</span>    cart = [{&quot;id&quot;: 1, &quot;price&quot;: 10.0}, {&quot;id&quot;: 2, &quot;price&quot;: 20.0}]</div>
+<div class='code-line' data-lineno='15'><span class='lineno'>15</span>    out = apply_discount(cart, 10)</div>
+<div class='code-line' data-lineno='16'><span class='lineno'>16</span>    assert len(out) == 2  # fails</div>
+</div>
+<div class='question'>Did the explanation change <em>why</em> you think so? (optional)</div>
+<textarea id='shapReason' rows='3' style='width:100%;'></textarea>
+<br><br><button id='finishBtn' disabled>Finish</button>
+</div>
+<div id='resultSection' style='display:none;'>
+<h2>Thank you!</h2>
+<p>Your responses (for demo purposes) are printed below:</p>
+<pre id='responses'></pre>
+</div>
+</div>
+<script>
+let baselineChoice=null, shapChoice=null;
+function addLineClickHandlers(containerId, onSelect){
+  document.getElementById(containerId).querySelectorAll('.code-line').forEach(dl=>{
+    dl.addEventListener('click',()=>{
+      // clear previous
+      dl.parentElement.querySelectorAll('.code-line').forEach(l=>l.classList.remove('selected'));
+      dl.classList.add('selected');
+      onSelect(parseInt(dl.getAttribute('data-lineno')));
+    });
+  });
+}
+addLineClickHandlers('baselineCode', ln=>{baselineChoice=ln; document.getElementById('toShapBtn').disabled=false;});
+addLineClickHandlers('shapSelection', ln=>{shapChoice=ln; document.getElementById('finishBtn').disabled=false;});
+document.getElementById('toShapBtn').addEventListener('click',()=>{
+  document.getElementById('baselineSection').style.display='none';
+  document.getElementById('shapSection').style.display='block';
+});
+document.getElementById('finishBtn').addEventListener('click',()=>{
+  document.getElementById('shapSection').style.display='none';
+  document.getElementById('resultSection').style.display='block';
+  const resp = {
+    baseline_line: baselineChoice,
+    baseline_reason: document.getElementById('baselineReason').value.trim(),
+    shap_line: shapChoice,
+    shap_reason: document.getElementById('shapReason').value.trim(),
+    timestamp: new Date().toISOString()
+  };
+  document.getElementById('responses').textContent = JSON.stringify(resp, null, 2);
+});
+</script>
+</body></html>

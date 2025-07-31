@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html><head><meta charset='utf-8'>
+<title>Interactive Bug-Localization Study</title>
+<style>
+*{box-sizing:border-box}
+body{font-family:Inter,Consolas,Menlo,monospace;background:#eef1f5;margin:0;padding:0;}
+.wrapper{max-width:1100px;margin:40px auto;background:#fff;border-radius:10px;box-shadow:0 3px 8px rgba(0,0,0,0.08);overflow:hidden;}
+header{background:#007acc;color:#fff;padding:20px;}
+h1{margin:0;font-size:22px;}
+section{padding:24px;}
+.code-window{background:#282c34;color:#f8f8f2;border-radius:6px;overflow-x:auto;max-height:420px;}
+.code-line{white-space:pre;padding-right:8px;cursor:pointer;position:relative;}
+.code-line:hover{background:#3a3f4b;}
+.lineno{display:inline-block;width:36px;color:#5c6370;user-select:none;padding-right:4px;}
+.selected{background:#49483e !important;}
+.question{margin:18px 0 10px;font-size:16px;}
+textarea{width:100%;border:1px solid #ccc;border-radius:4px;padding:8px;font-family:inherit;font-size:14px;}
+button{background:#007acc;color:#fff;border:none;border-radius:4px;padding:10px 22px;font-size:16px;cursor:pointer;margin-top:12px;}
+button:disabled{background:#a5c4de;cursor:not-allowed;}
+#featurePanel{border-left:1px solid #ddd;padding:16px 20px;background:#fafbfc;}
+#featurePanel h3{margin-top:0;font-size:18px;}
+.feature{margin-bottom:8px;font-size:14px;}
+.feature span{font-weight:bold;}
+.tooltip{position:absolute;left:100%;top:0;background:#23272e;color:#fff;padding:6px 8px;border-radius:4px;font-size:12px;white-space:normal;min-width:160px;max-width:260px;pointer-events:none;opacity:0;transition:opacity .15s;}
+.code-line:hover .tooltip{opacity:1;}
+.sr-only{position:absolute;left:-10000px;top:auto;width:1px;height:1px;overflow:hidden;}
+.grid{display:grid;grid-template-columns:1fr 260px;gap:0;}
+.fade{animation:fadeIn .4s ease;}
+@keyframes fadeIn{from{opacity:0;}to{opacity:1;}}
+</style>
+</head>
+<body>
+<div class='wrapper'>
+<header><h1>Bug-Localization Task</h1></header>
+
+<section id='baselineSection' class='fade'>
+<p>The predictive model flags this file as <strong style='color:#e06c75;'>BUGGY</strong> (probability 0.92).</p>
+
+<div class='grid'>
+<div>
+<div class='question'>Q1. Click the <em>single line</em> you believe causes the failure.</div>
+<div class='code-window' id='baselineCode'>
+
+<div class='code-line' data-lineno='1'><span class='lineno'> 1</span>def apply_discount(items, discount_pct):</div>
+<div class='code-line' data-lineno='2'><span class='lineno'> 2</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='3'><span class='lineno'> 3</span>    Return a new list with the discount applied.</div>
+<div class='code-line' data-lineno='4'><span class='lineno'> 4</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='5'><span class='lineno'> 5</span>    discounted = []</div>
+<div class='code-line' data-lineno='6'><span class='lineno'> 6</span>    for i in range(len(items) - 1):    # BUG: last item never processed</div>
+<div class='code-line' data-lineno='7'><span class='lineno'> 7</span>        price, id_ = items[i][&quot;price&quot;], items[i][&quot;id&quot;]</div>
+<div class='code-line' data-lineno='8'><span class='lineno'> 8</span>        new_price = round(price * (1 - discount_pct / 100), 2)</div>
+<div class='code-line' data-lineno='9'><span class='lineno'> 9</span>        discounted.append({&quot;id&quot;: id_, &quot;price&quot;: new_price})</div>
+<div class='code-line' data-lineno='10'><span class='lineno'>10</span>    return discounted</div>
+<div class='code-line' data-lineno='11'><span class='lineno'>11</span></div>
+<div class='code-line' data-lineno='12'><span class='lineno'>12</span># failing unit test</div>
+<div class='code-line' data-lineno='13'><span class='lineno'>13</span>if __name__ == &quot;__main__&quot;:</div>
+<div class='code-line' data-lineno='14'><span class='lineno'>14</span>    cart = [{&quot;id&quot;: 1, &quot;price&quot;: 10.0}, {&quot;id&quot;: 2, &quot;price&quot;: 20.0}]</div>
+<div class='code-line' data-lineno='15'><span class='lineno'>15</span>    out = apply_discount(cart, 10)</div>
+<div class='code-line' data-lineno='16'><span class='lineno'>16</span>    assert len(out) == 2  # fails</div>
+
+</div>
+
+<div class='question'>Why do you think this line is faulty? <span class='sr-only'>(optional)</span></div>
+<textarea id='baselineReason' rows='3' placeholder='Your explanation (optional)'></textarea>
+<button id='toExplainBtn' disabled>Show model explanation →</button>
+</div>
+</div>
+</section>
+
+<section id='explainSection' style='display:none;' class='fade'>
+<p>Below you see the same file with a <strong>SHAP heat-map</strong>. Darker red ⇒ stronger evidence for being buggy.</p>
+
+<div class='grid'>
+<div>
+<div class='code-window' id='shapCode'>
+
+<div class='code-line' data-lineno='1' style='background:transparent;'><span class='lineno'> 1</span>def apply_discount(items, discount_pct):<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='2' style='background:transparent;'><span class='lineno'> 2</span>    &quot;&quot;&quot;<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='3' style='background:transparent;'><span class='lineno'> 3</span>    Return a new list with the discount applied.<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='4' style='background:transparent;'><span class='lineno'> 4</span>    &quot;&quot;&quot;<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='5' style='background:transparent;'><span class='lineno'> 5</span>    discounted = []<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='6' style='background:rgba(255,0,0,0.70);'><span class='lineno'> 6</span>    for i in range(len(items) - 1):    # BUG: last item never processed<div class='tooltip'>Loop iterates to len(items)-1: typical off-by-one boundary pattern. Large positive contribution.</div></div>
+<div class='code-line' data-lineno='7' style='background:rgba(255,0,0,0.36);'><span class='lineno'> 7</span>        price, id_ = items[i][&quot;price&quot;], items[i][&quot;id&quot;]<div class='tooltip'>Uses loop index &#x27;i&#x27; to access items; bug propagates here. Medium contribution.</div></div>
+<div class='code-line' data-lineno='8' style='background:rgba(255,0,0,0.25);'><span class='lineno'> 8</span>        new_price = round(price * (1 - discount_pct / 100), 2)<div class='tooltip'>Calculates new_price; depends on previous line. Small contribution.</div></div>
+<div class='code-line' data-lineno='9' style='background:rgba(255,0,0,0.21);'><span class='lineno'> 9</span>        discounted.append({&quot;id&quot;: id_, &quot;price&quot;: new_price})<div class='tooltip'>SHAP |value| = 0.02 (low impact)</div></div>
+<div class='code-line' data-lineno='10' style='background:transparent;'><span class='lineno'>10</span>    return discounted<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='11' style='background:transparent;'><span class='lineno'>11</span><div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='12' style='background:transparent;'><span class='lineno'>12</span># failing unit test<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='13' style='background:transparent;'><span class='lineno'>13</span>if __name__ == &quot;__main__&quot;:<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='14' style='background:transparent;'><span class='lineno'>14</span>    cart = [{&quot;id&quot;: 1, &quot;price&quot;: 10.0}, {&quot;id&quot;: 2, &quot;price&quot;: 20.0}]<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='15' style='background:transparent;'><span class='lineno'>15</span>    out = apply_discount(cart, 10)<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+<div class='code-line' data-lineno='16' style='background:transparent;'><span class='lineno'>16</span>    assert len(out) == 2  # fails<div class='tooltip'>SHAP |value| = 0.00 (low impact)</div></div>
+
+</div>
+
+<div class='question'>Q2. After seeing the explanation, which line do you <em>now</em> believe is the culprit? Click again.</div>
+<div class='code-window' id='selectionCode' style='max-height:260px;'>
+
+<div class='code-line' data-lineno='1'><span class='lineno'> 1</span>def apply_discount(items, discount_pct):</div>
+<div class='code-line' data-lineno='2'><span class='lineno'> 2</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='3'><span class='lineno'> 3</span>    Return a new list with the discount applied.</div>
+<div class='code-line' data-lineno='4'><span class='lineno'> 4</span>    &quot;&quot;&quot;</div>
+<div class='code-line' data-lineno='5'><span class='lineno'> 5</span>    discounted = []</div>
+<div class='code-line' data-lineno='6'><span class='lineno'> 6</span>    for i in range(len(items) - 1):    # BUG: last item never processed</div>
+<div class='code-line' data-lineno='7'><span class='lineno'> 7</span>        price, id_ = items[i][&quot;price&quot;], items[i][&quot;id&quot;]</div>
+<div class='code-line' data-lineno='8'><span class='lineno'> 8</span>        new_price = round(price * (1 - discount_pct / 100), 2)</div>
+<div class='code-line' data-lineno='9'><span class='lineno'> 9</span>        discounted.append({&quot;id&quot;: id_, &quot;price&quot;: new_price})</div>
+<div class='code-line' data-lineno='10'><span class='lineno'>10</span>    return discounted</div>
+<div class='code-line' data-lineno='11'><span class='lineno'>11</span></div>
+<div class='code-line' data-lineno='12'><span class='lineno'>12</span># failing unit test</div>
+<div class='code-line' data-lineno='13'><span class='lineno'>13</span>if __name__ == &quot;__main__&quot;:</div>
+<div class='code-line' data-lineno='14'><span class='lineno'>14</span>    cart = [{&quot;id&quot;: 1, &quot;price&quot;: 10.0}, {&quot;id&quot;: 2, &quot;price&quot;: 20.0}]</div>
+<div class='code-line' data-lineno='15'><span class='lineno'>15</span>    out = apply_discount(cart, 10)</div>
+<div class='code-line' data-lineno='16'><span class='lineno'>16</span>    assert len(out) == 2  # fails</div>
+
+</div>
+
+<div class='question'>Did the explanation change <em>why</em>? (optional)</div>
+<textarea id='shapReason' rows='3' placeholder='Your updated explanation (optional)'></textarea>
+<button id='finishBtn' disabled>Finish</button>
+</div>
+
+<!-- Feature side panel -->
+<aside id='featurePanel'>
+<h3>Top contributing features</h3>
+
+<div class='feature'>• <span>Loop boundary uses len(x)-1</span> — SHAP 0.68</div>
+<div class='feature'>• <span>Cyclomatic complexity > 5</span> — SHAP 0.18</div>
+<div class='feature'>• <span>Recent code churn (3 edits last week)</span> — SHAP 0.07</div>
+
+</aside>
+</div>
+</section>
+
+<section id='resultSection' style='display:none;' class='fade'>
+<h2>Thank you!</h2>
+<p>Your (demo) responses are printed below:</p>
+<pre id='out'></pre>
+</section>
+</div>
+
+<script>
+let baselineChoice=null, shapChoice=null;
+
+// helper to make lines selectable
+function makeSelectable(containerId, onPick){
+  document.getElementById(containerId).querySelectorAll('.code-line').forEach(l=>{
+     l.addEventListener('click',()=>{
+        l.parentElement.querySelectorAll('.code-line').forEach(n=>n.classList.remove('selected'));
+        l.classList.add('selected');
+        onPick(parseInt(l.dataset.lineno));
+     });
+  });
+}
+
+makeSelectable('baselineCode', ln=>{
+  baselineChoice=ln;
+  document.getElementById('toExplainBtn').disabled=false;
+});
+makeSelectable('selectionCode', ln=>{
+  shapChoice=ln;
+  document.getElementById('finishBtn').disabled=false;
+});
+
+// transition
+document.getElementById('toExplainBtn').addEventListener('click',()=>{
+  document.getElementById('baselineSection').style.display='none';
+  document.getElementById('explainSection').style.display='block';
+  window.scrollTo(0,0);
+});
+
+// finish
+document.getElementById('finishBtn').addEventListener('click',()=>{
+  document.getElementById('explainSection').style.display='none';
+  document.getElementById('resultSection').style.display='block';
+  const payload={
+    baseline_line:baselineChoice,
+    baseline_reason:document.getElementById('baselineReason').value.trim(),
+    shap_line:shapChoice,
+    shap_reason:document.getElementById('shapReason').value.trim(),
+    ts:(new Date()).toISOString()
+  };
+  document.getElementById('out').textContent=JSON.stringify(payload,null,2);
+  console.log('Study response', payload);
+});
+</script>
+</body></html>

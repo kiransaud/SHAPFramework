@@ -1,0 +1,9 @@
+# Virtual environment
+xaienv/
+
+# System files
+.DS_Store
+
+# Large model files (if any)
+models/*.pkl
+models/rf_baseline.pkl

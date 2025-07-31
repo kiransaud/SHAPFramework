@@ -1,0 +1,6 @@
+Module,SHAP_Sum,Top_Contributors
+550,0.5080200296661919,"[('Lines of Code', np.float64(0.029)), ('Total Lines of Code', np.float64(0.038)), ('Function Inputs', np.float64(0.147))]"
+3653,0.5080200259665262,"[('Code Complexity (Object)', np.float64(0.025)), ('Code Maintainability', np.float64(0.032)), ('Code Design Quality', np.float64(0.04))]"
+1584,0.5060200315938762,"[('Lines of Code', np.float64(0.027)), ('Function Inputs', np.float64(0.031)), ('Function Outputs', np.float64(0.05))]"
+566,0.5060200288284765,"[('Total Logical Code Size', np.float64(0.027)), ('Code Churn (Statements)', np.float64(0.037)), ('Function Outputs', np.float64(0.047))]"
+3238,0.5050200351007499,"[('Code Efficiency (Volume)', np.float64(0.031)), ('Function Outputs', np.float64(0.034)), ('Code Churn (Statements)', np.float64(0.035))]"
