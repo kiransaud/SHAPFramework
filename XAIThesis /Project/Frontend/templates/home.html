@@ -1,0 +1,141 @@
+{% extends 'Base.html' %}
+
+{% block content %}
+
+
+<nav class="bg-white border-gray-200 dark:bg-blue-900 w-auto">
+	<div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+		<div class = "flex items-center space-x-1 rtl:space-x-reverse">
+			<img src="https://avatars.githubusercontent.com/u/60805229?v=4" class="h-8" alt="Flowbite Logo" />
+		  <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">SHAP-XAI</span>
+			</div>
+	  <button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-default" aria-expanded="false">
+		  <span class="sr-only">Open main menu</span>
+		  <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+			  <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+		  </svg>
+	  </button>
+	  <div class="hidden w-full md:block md:w-auto" id="navbar-default">
+		<ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+		  {% comment %} <li>
+			<a href="#" class="block py-2 px-3 text-white bg-blue-700 rounded-sm md:bg-transparent md:text-blue-700 md:p-0 dark:text-white md:dark:text-blue-500" aria-current="page">Home</a>
+		  </li> {% endcomment %}
+		  <li>
+			<a
+			href="{% url 'login' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Login</a>
+		  </li>
+		  <li>
+			<a href="{% url 'signup' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">SignUp</a>
+		  </li>
+			<li>
+			<a href="{% url 'training' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">🌿Workflow</a>
+		  </li>
+		</ul>
+	  </div>
+	</div>
+  </nav>
+
+
+<!-- Hero Section -->
+<section class="bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-700 dark:to-indigo-700 py-20">
+	<div class="container mx-auto px-6 text-center">
+	  <h1 data-aos="fade-up" class="text-5xl font-extrabold text-white mb-4 animate-bounce">
+		SHAP-XAI Evaluation
+	  </h1>
+	  <p data-aos="fade-up" data-aos-delay="200" class="text-xl text-white mb-8">
+		Unraveling defect prediction models with tailored explanations for every stakeholder with sustainability consideration.
+	  </p>
+	  <a data-aos="fade-up" data-aos-delay="400" href="{% url 'guide' %}" class="bg-white text-blue-700 py-3 px-8 rounded-full font-semibold shadow-lg hover:bg-gray-200 transition duration-300">
+		Discover More
+	  </a>
+	</div>
+  </section>
+
+
+<!-- About Section -->
+<section id="about" class="py-16 bg-white dark:bg-gray-900">
+<div class="container mx-auto px-6 flex flex-col md:flex-row items-start">
+  <div data-aos="fade-right" class="w-full md:w-1/3 flex justify-center md:justify-start">
+	<img src="https://analyttica.com/wp-content/uploads/2022/01/xai1.png" alt="Thesis Illustration" class="rounded-lg shadow-lg max-w-md w-full h-auto">
+  </div>
+
+  <div data-aos="fade-left" class="w-full md:w-1/1 mt-8 md:mt-0 md:pl-12">
+	<h2 class="text-3xl font-bold text-gray-800 dark:text-white mb-4 text-center">About the Thesis</h2>
+	<p class="text-gray-600 dark:text-gray-300 mb-4 text-center">
+	  This research leverages SHAP to generate intuitive explanations from defect prediction models. Tailored for developers, managers, and QA teams, the study bridges technical insights with actionable strategies.
+	  By collecting and analyzing feedback, we aim to enhance trust and improve decision-making in software engineering.
+	</p>
+
+  </div>
+</div>
+</section>
+
+<!-- Features Section -->
+<section class="py-16 bg-gray-50 dark:bg-gray-800">
+	<div class="container mx-auto px-6 text-center">
+	  <h2 data-aos="fade-up" class="text-3xl font-bold text-gray-800 dark:text-white mb-12">
+		Key Features
+	  </h2>
+	  <!-- Grid with two columns -->
+	  <div class="grid grid-cols-1 sm:grid-cols-2 gap-8">
+		<div data-aos="flip-left" class="px-4 mb-8">
+		  <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+			<h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Tailored Explanations</h3>
+			<p class="text-gray-600 dark:text-gray-300">
+			  Customized insights for developers, project managers, QA teams and Domain Expert.
+			</p>
+		  </div>
+		</div>
+		<div data-aos="flip-left" data-aos-delay="150" class="px-4 mb-8">
+		  <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+			<h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Model Transparency</h3>
+			<p class="text-gray-600 dark:text-gray-300">
+			  Visualize feature contributions using state-of-the-art SHAP values.
+			</p>
+		  </div>
+		</div>
+		<div data-aos="flip-left" data-aos-delay="300" class="px-4 mb-8">
+		  <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+			<h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Evaluation & Feedback</h3>
+			<p class="text-gray-600 dark:text-gray-300">
+			  Iteratively refine explanations based on comprehensive stakeholder feedback.
+			</p>
+		  </div>
+		</div>
+		<div data-aos="flip-left" data-aos-delay="450" class="px-4 mb-8">
+		  <div class="bg-white dark:bg-gray-700 rounded-xl shadow-lg p-6 transform hover:scale-105 transition duration-300">
+			<h3 class="text-xl font-bold text-gray-800 dark:text-white mb-2">Energy Consumption Monitoring</h3>
+			<p class="text-gray-600 dark:text-gray-300">
+			  Monitor energy usage with CodeCarbon while training defect prediction models and generating explanations.
+			</p>
+		  </div>
+		</div>
+	  </div>
+	</div>
+  </section>
+
+
+
+  <!-- Call-to-Action Section -->
+  <section class="py-16 bg-gradient-to-r from-indigo-600 to-blue-600 dark:from-indigo-800 dark:to-blue-800">
+	<div class="container mx-auto px-6 text-center">
+	  <h2 data-aos="zoom-in" class="text-3xl font-bold text-white mb-4">Join the Journey</h2>
+	  <p data-aos="zoom-in" data-aos-delay="200" class="text-white mb-8">
+		Explore the future of defect prediction and model interpretability with SHAP-XAI.
+	  </p>
+	  <a data-aos="zoom-in" data-aos-delay="400" href="{% url 'signup' %}" class="bg-white text-blue-700 py-3 px-8 rounded-full font-semibold shadow-lg hover:bg-gray-200 transition duration-300">
+		Get Started
+	  </a>
+	</div>
+  </section>
+  <!-- Footer -->
+  <footer class="bg-white dark:bg-gray-900 py-6">
+	<div class="container mx-auto px-6 text-center">
+	  <p class="text-gray-600 dark:text-gray-300">
+		&copy; {{ current_year }} SHAP-XAI Thesis. All rights reserved.
+	  </p>
+	</div>
+  </footer>
+
+{% endblock %}
+

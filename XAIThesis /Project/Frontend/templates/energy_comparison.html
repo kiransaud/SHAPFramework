@@ -1,0 +1,843 @@
+{% extends 'Base.html' %}
+{% load tailwind_filters widget_tweaks %}
+
+{% block content %}
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHAP-XAI Energy Analysis</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .glass-effect {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .metric-card {
+            background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%);
+            border: 1px solid #e2e8f0;
+        }
+
+        .tab-active {
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            box-shadow: 0 4px 14px 0 rgba(59, 130, 246, 0.39);
+        }
+
+        .floating-action {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .pulse-ring {
+            animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(.33); }
+            80%, 100% { opacity: 0; }
+        }
+
+        .chart-container {
+            position: relative;
+            background: linear-gradient(145deg, #ffffff 0%, #f1f5f9 100%);
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        .error-state {
+            text-align: center;
+            padding: 2rem;
+            background: #fee2e2;
+            border-radius: 1rem;
+            margin: 2rem;
+        }
+
+        /* Fix for chart rendering in hidden containers */
+        .tab-content.hidden {
+            display: none !important;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white border-gray-200 dark:bg-blue-900">
+        <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+            <div class="flex items-center space-x-1 rtl:space-x-reverse">
+                <img src="https://avatars.githubusercontent.com/u/60805229?v=4" class="h-8" alt="SHAP-XAI Logo" />
+                <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">SHAP-XAI</span>
+            </div>
+            <div class="hidden w-full md:block md:w-auto" id="navbar-default">
+                <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50
+                           md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white
+                           dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+                    <li>
+                        <a href="{% url 'home' %}" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100
+                            md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white
+                            md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white
+                            md:dark:hover:bg-transparent">Home</a>
+                    </li>
+                    <li>
+                        <a href="{% url 'signup' %}" class="block py-2 px-3 text-gray-900 rounded hover:bg-gray-100
+                            md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white
+                            md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white
+                            md:dark:hover:bg-transparent">SignUp</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- File Upload Form -->
+    <form method="post" enctype="multipart/form-data" class="max-w-md mx-auto mb-8 p-4 bg-white rounded-2xl shadow-lg border border-gray-200/50">
+        {% csrf_token %}
+        <label class="block mb-2 font-medium text-gray-700">Upload energy CSV:</label>
+        <input
+            type="file"
+            name="csv_file"
+            accept=".csv"
+            class="block w-full text-sm text-gray-500
+                   file:mr-4 file:py-2 file:px-4
+                   file:rounded-full file:border-0
+                   file:text-sm file:font-semibold
+                   file:bg-blue-50 file:text-blue-700
+                   hover:file:bg-blue-100"
+        />
+        <button
+            type="submit"
+            class="mt-4 w-full py-2 rounded-xl bg-blue-600 text-white font-medium
+                   hover:bg-blue-700 transition"
+        >Upload & Analyze</button>
+    </form>
+
+    <!-- Display Messages -->
+    {% if messages %}
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+            {% for message in messages %}
+                <div class="p-4 mb-4 rounded-lg {% if message.tags == 'error' %}bg-red-100 text-red-800{% elif message.tags == 'success' %}bg-green-100 text-green-800{% else %}bg-blue-100 text-blue-800{% endif %}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Error State -->
+    {% if error %}
+        <div class="error-state">
+            <h2 class="text-xl font-semibold text-red-800 mb-2">Analysis Unavailable</h2>
+            <p class="text-red-600">Please upload a valid CSV file or check the error messages above.</p>
+        </div>
+    {% else %}
+        <!-- Data Source Indicator -->
+        {% if data_source %}
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <p class="text-sm text-blue-800">
+                        <strong>Data Source:</strong>
+                        {% if data_source == 'uploaded' %}
+                            Uploaded CSV file ({{ total_projects|default:"0" }} projects)
+                        {% else %}
+                            Default dataset ({{ total_projects|default:"0" }} projects)
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+        {% endif %}
+
+        <!-- Hero Section -->
+        <div class="relative overflow-hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+                <div class="text-center mb-12">
+                    <div class="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-4">
+                        <span class="w-2 h-2 bg-blue-500 rounded-full mr-2 pulse-ring"></span>
+                        Energy Analysis Dashboard
+                    </div>
+                    <h1 class="text-4xl md:text-6xl font-bold text-gray-900 mb-4">
+                        Energy Consumption
+                        <span class="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">Analysis</span>
+                    </h1>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                        Comprehensive comparison between SHAP Explanation and RF Baseline models,
+                        analyzing energy consumption patterns and environmental impact.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+            <div class="flex justify-center">
+                <div class="bg-white p-2 rounded-2xl shadow-lg border border-gray-200/50">
+                    <nav class="flex space-x-2">
+                        <button id="charts-tab"
+                                class="px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 tab-active"
+                                onclick="switchTab('charts')">
+                            📊 Charts
+                        </button>
+                        <button id="breakdown-tab"
+                                class="px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 text-gray-600 hover:text-blue-600"
+                                onclick="switchTab('breakdown')">
+                            🔍 Energy Breakdown
+                        </button>
+                        <button id="summary-tab"
+                                class="px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300 text-gray-600 hover:text-blue-600"
+                                onclick="switchTab('summary')">
+                            📈 Summary
+                        </button>
+                    </nav>
+                </div>
+            </div>
+        </div>
+
+        <!-- Charts Content -->
+        <div id="charts-content" class="tab-content">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Energy Comparison Chart -->
+                    <div class="chart-container card-hover">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-gray-800">Energy Consumption</h3>
+                            <div class="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Primary Metric</div>
+                        </div>
+                        <div class="relative h-80">
+                            <canvas id="energyChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Emissions Comparison Chart -->
+                    <div class="chart-container card-hover">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="text-xl font-semibold text-gray-800">CO₂ Emissions</h3>
+                            <div class="px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Environmental Impact</div>
+                        </div>
+                        <div class="relative h-80">
+                            <canvas id="emissionsChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Proportional Distribution -->
+                <div class="mt-8">
+                    <div class="chart-container card-hover">
+                        <div class="text-center mb-6">
+                            <h3 class="text-2xl font-semibold text-gray-800 mb-2">Energy Distribution</h3>
+                            <p class="text-gray-600">Proportional comparison between baseline and SHAP models</p>
+                        </div>
+                        <div class="flex justify-center">
+                            <div class="relative w-96 h-96">
+                                <canvas id="pieChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Energy Breakdown Content -->
+        <div id="breakdown-content" class="tab-content hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+                <!-- Stacked Bar Chart -->
+                <div class="chart-container card-hover mb-8">
+                    <div class="text-center mb-6">
+                        <h3 class="text-2xl font-semibold text-gray-800 mb-2">Component Energy Breakdown</h3>
+                        <p class="text-gray-600">CPU, RAM, and GPU energy consumption analysis</p>
+                    </div>
+                    <div class="relative h-96">
+                        <canvas id="stackedBarChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Component Details -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <!-- Baseline Breakdown -->
+                    <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-200/50 card-hover">
+                        <div class="flex items-center mb-6">
+                            <div class="w-4 h-4 bg-blue-500 rounded-full mr-3"></div>
+                            <h3 class="text-xl font-semibold text-gray-800">RF Baseline</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="metric-card p-4 rounded-xl">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-600">CPU Energy</span>
+                                    <span class="font-bold text-gray-900">{{ raw_data.baseline.cpu|floatformat:5|default:"0.00000" }} kWh</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                    {% if raw_data.baseline.energy and raw_data.baseline.energy != 0 %}
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {% widthratio raw_data.baseline.cpu raw_data.baseline.energy 100 %}%"></div>
+                                    {% else %}
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="metric-card p-4 rounded-xl">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-600">RAM Energy</span>
+                                    <span class="font-bold text-gray-900">{{ raw_data.baseline.ram|floatformat:5|default:"0.00000" }} kWh</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                    {% if raw_data.baseline.energy and raw_data.baseline.energy != 0 %}
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: {% widthratio raw_data.baseline.ram raw_data.baseline.energy 100 %}%"></div>
+                                    {% else %}
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="metric-card p-4 rounded-xl">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-600">GPU Energy</span>
+                                    <span class="font-bold text-gray-900">{{ raw_data.baseline.gpu|floatformat:5|default:"0.00000" }} kWh</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                    {% if raw_data.baseline.energy and raw_data.baseline.energy != 0 %}
+                                        <div class="bg-yellow-500 h-2 rounded-full" style="width: {% widthratio raw_data.baseline.gpu raw_data.baseline.energy 100 %}%"></div>
+                                    {% else %}
+                                        <div class="bg-yellow-500 h-2 rounded-full" style="width: 0%"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-r from-blue-50 to-blue-100 p-4 rounded-xl border-2 border-blue-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-gray-800">Total Energy</span>
+                                    <span class="font-bold text-blue-700">{{ raw_data.baseline.energy|floatformat:5|default:"0.00000" }} kWh</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SHAP Breakdown -->
+                    <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-200/50 card-hover">
+                        <div class="flex items-center mb-6">
+                            <div class="w-4 h-4 bg-green-500 rounded-full mr-3"></div>
+                            <h3 class="text-xl font-semibold text-gray-800">SHAP Explanation</h3>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="metric-card p-4 rounded-xl">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-600">CPU Energy</span>
+                                    <span class="font-bold text-gray-900">{{ raw_data.shap.cpu|floatformat:5|default:"0.00000" }} kWh</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                    {% if raw_data.shap.energy and raw_data.shap.energy != 0 %}
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: {% widthratio raw_data.shap.cpu raw_data.shap.energy 100 %}%"></div>
+                                    {% else %}
+                                        <div class="bg-blue-500 h-2 rounded-full" style="width: 0%"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="metric-card p-4 rounded-xl">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-600">RAM Energy</span>
+                                    <span class="font-bold text-gray-900">{{ raw_data.shap.ram|floatformat:5|default:"0.00000" }} kWh</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                    {% if raw_data.shap.energy and raw_data.shap.energy != 0 %}
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: {% widthratio raw_data.shap.ram raw_data.shap.energy 100 %}%"></div>
+                                    {% else %}
+                                        <div class="bg-green-500 h-2 rounded-full" style="width: 0%"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="metric-card p-4 rounded-xl">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium text-gray-600">GPU Energy</span>
+                                    <span class="font-bold text-gray-900">{{ raw_data.shap.gpu|floatformat:5|default:"0.00000" }} kWh</span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                    {% if raw_data.shap.energy and raw_data.shap.energy != 0 %}
+                                        <div class="bg-yellow-500 h-2 rounded-full" style="width: {% widthratio raw_data.shap.gpu raw_data.shap.energy 100 %}%"></div>
+                                    {% else %}
+                                        <div class="bg-yellow-500 h-2 rounded-full" style="width: 0%"></div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="bg-gradient-to-r from-green-50 to-green-100 p-4 rounded-xl border-2 border-green-200">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-bold text-gray-800">Total Energy</span>
+                                    <span class="font-bold text-green-700">{{ raw_data.shap.energy|floatformat:5|default:"0.00000" }} kWh</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Summary Content -->
+        <div id="summary-content" class="tab-content hidden">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+                <!-- Key Metrics Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200/50 card-hover">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-blue-100 rounded-2xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <span class="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">Baseline</span>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-600 mb-1">RF Baseline Energy</h3>
+                        <p class="text-2xl font-bold text-gray-900">{{ raw_data.baseline.energy|floatformat:5|default:"0.00000" }} kWh</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200/50 card-hover">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-green-100 rounded-2xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                                </svg>
+                            </div>
+                            <span class="px-2 py-1 bg-green-100 text-green-800 rounded-full text-xs font-medium">SHAP</span>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-600 mb-1">SHAP Energy</h3>
+                        <p class="text-2xl font-bold text-gray-900">{{ raw_data.shap.energy|floatformat:5|default:"0.00000" }} kWh</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200/50 card-hover">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-red-100 rounded-2xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+                                </svg>
+                            </div>
+                            <span class="px-2 py-1 bg-red-100 text-red-800 rounded-full text-xs font-medium">Increase</span>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-600 mb-1">Energy Increase</h3>
+                        <p class="text-2xl font-bold text-gray-900">{{ comparisonMetrics.pct_increase|floatformat:1|default:"0.0" }}%</p>
+                    </div>
+
+                    <div class="bg-white rounded-2xl p-6 shadow-lg border border-gray-200/50 card-hover">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="w-12 h-12 bg-purple-100 rounded-2xl flex items-center justify-center">
+                                <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                </svg>
+                            </div>
+                            <span class="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">Duration</span>
+                        </div>
+                        <h3 class="text-sm font-medium text-gray-600 mb-1">Time Multiple</h3>
+                        <p class="text-2xl font-bold text-gray-900">{{ duration_ratio|floatformat:1|default:"0.0" }}×</p>
+                    </div>
+                </div>
+
+                <!-- Detailed Analysis -->
+                <div class="bg-white rounded-2xl p-8 shadow-lg border border-gray-200/50 card-hover">
+                    <h3 class="text-2xl font-semibold text-gray-800 mb-8">Detailed Analysis</h3>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div class="space-y-6">
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0 w-10 h-10 bg-blue-100 rounded-xl flex items-center justify-center">
+                                    <span class="text-blue-600 font-semibold">⚡</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Energy Efficiency</h4>
+                                    <p class="text-gray-600">SHAP requires {{ duration_ratio|floatformat:1|default:"0.0" }}× more energy per operation compared to the baseline RF model, with efficiency {{ eff_pct|floatformat:1|default:"0.0" }}% {{ eff_label|default:"unchanged" }} than baseline.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0 w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
+                                    <span class="text-green-600 font-semibold">🌱</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Environmental Impact</h4>
+                                    <p class="text-gray-600">The increased energy consumption translates to {{ emissions_increase|floatformat:2|default:"0.00" }} kg additional CO₂ emissions, representing a {{ emissions_pct|floatformat:1|default:"0.0" }}% increase in carbon footprint.</p>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start space-x-4">
+                                <div class="flex-shrink-0 w-10 h-10 bg-purple-100 rounded-xl flex items-center justify-center">
+                                    <span class="text-purple-600 font-semibold">📊</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-800 mb-2">Performance Analysis</h4>
+                                    <p class="text-gray-600">While SHAP provides explainable AI capabilities, it comes at the cost of {{ comparisonMetrics.pct_increase|floatformat:1|default:"0.0" }}% higher energy consumption compared to the baseline model.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="space-y-6">
+                            <div class="bg-gradient-to-br from-blue-50 to-indigo-100 p-6 rounded-xl">
+                                <h4 class="font-semibold text-gray-800 mb-4">Component Analysis</h4>
+                                <div class="space-y-3">
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600">CPU Usage Increase</span>
+                                        <span class="font-semibold text-blue-700">{{ component_increases.cpu_pct_increase|floatformat:1|default:"0.0" }}%</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600">RAM Usage Increase</span>
+                                        <span class="font-semibold text-green-700">{{ component_increases.ram_pct_increase|floatformat:1|default:"0.0" }}%</span>
+                                    </div>
+                                    <div class="flex justify-between items-center">
+                                        <span class="text-sm text-gray-600">GPU Usage Increase</span>
+                                        <span class="font-semibold text-yellow-700">{{ component_increases.gpu_pct_increase|floatformat:1|default:"0.0" }}%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl">
+                                <h4 class="font-semibold text-gray-800 mb-4">Recommendations</h4>
+                                <ul class="space-y-2 text-sm text-gray-600">
+                                    <li class="flex items-start space-x-2">
+                                        <span class="text-green-600 mt-1">•</span>
+                                        <span>Consider optimizing SHAP computation for energy efficiency</span>
+                                    </li>
+                                    <li class="flex items-start space-x-2">
+                                        <span class="text-green-600 mt-1">•</span>
+                                        <span>Evaluate trade-offs between explainability and energy consumption</span>
+                                    </li>
+                                    <li class="flex items-start space-x-2">
+                                        <span class="text-green-600 mt-1">•</span>
+                                        <span>Monitor long-term environmental impact in production</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Chart.js Scripts -->
+    <script>
+        // Global Chart.js configuration
+        Chart.defaults.font.family = 'Inter, sans-serif';
+        Chart.defaults.color = '#6B7280';
+        Chart.defaults.borderColor = '#E5E7EB';
+        Chart.defaults.backgroundColor = 'rgba(59, 130, 246, 0.1)';
+
+        // Data preparation
+        const energyData = {
+            baseline: {{ raw_data.baseline.energy|default:0 }},
+            shap: {{ raw_data.shap.energy|default:0 }}
+        };
+
+        const emissionsData = {
+            baseline: {{ raw_data.baseline.emissions|default:0 }},
+            shap: {{ raw_data.shap.emissions|default:0 }}
+        };
+
+        const componentData = {
+            baseline: {
+                cpu: {{ raw_data.baseline.cpu|default:0 }},
+                ram: {{ raw_data.baseline.ram|default:0 }},
+                gpu: {{ raw_data.baseline.gpu|default:0 }}
+            },
+            shap: {
+                cpu: {{ raw_data.shap.cpu|default:0 }},
+                ram: {{ raw_data.shap.ram|default:0 }},
+                gpu: {{ raw_data.shap.gpu|default:0 }}
+            }
+        };
+
+        // Tab switching functionality
+        function switchTab(tabName) {
+            // Hide all tab contents
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.add('hidden');
+            });
+
+            // Remove active class from all tabs
+            document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+                tab.classList.remove('tab-active');
+                tab.classList.add('text-gray-600', 'hover:text-blue-600');
+            });
+
+            // Show selected tab content
+            document.getElementById(tabName + '-content').classList.remove('hidden');
+
+            // Add active class to selected tab
+            const activeTab = document.getElementById(tabName + '-tab');
+            activeTab.classList.add('tab-active');
+            activeTab.classList.remove('text-gray-600', 'hover:text-blue-600');
+
+            // Trigger chart resize for proper rendering
+            setTimeout(() => {
+                Object.values(Chart.instances).forEach(chart => {
+                    chart.resize();
+                });
+            }, 100);
+        }
+
+        // Energy Comparison Chart
+        const energyCtx = document.getElementById('energyChart').getContext('2d');
+        const energyChart = new Chart(energyCtx, {
+            type: 'bar',
+            data: {
+                labels: ['RF Baseline', 'SHAP Explanation'],
+                datasets: [{
+                    label: 'Energy (kWh)',
+                    data: [energyData.baseline, energyData.shap],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(34, 197, 94, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(34, 197, 94, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y.toFixed(5) + ' kWh';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(5) + ' kWh';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Emissions Comparison Chart
+        const emissionsCtx = document.getElementById('emissionsChart').getContext('2d');
+        const emissionsChart = new Chart(emissionsCtx, {
+            type: 'bar',
+            data: {
+                labels: ['RF Baseline', 'SHAP Explanation'],
+                datasets: [{
+                    label: 'CO₂ Emissions (kg)',
+                    data: [emissionsData.baseline, emissionsData.shap],
+                    backgroundColor: [
+                        'rgba(239, 68, 68, 0.8)',
+                        'rgba(245, 101, 101, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(239, 68, 68, 1)',
+                        'rgba(245, 101, 101, 1)'
+                    ],
+                    borderWidth: 2,
+                    borderRadius: 8,
+                    borderSkipped: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        cornerRadius: 8,
+                        displayColors: false,
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y.toFixed(5) + ' kg CO₂';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(5) + ' kg';
+                            }
+                        }
+                    },
+                    x: {
+                        grid: {
+                            display: false
+                        }
+                    }
+                }
+            }
+        });
+
+        // Pie Chart for Energy Distribution
+        const pieCtx = document.getElementById('pieChart').getContext('2d');
+        const pieChart = new Chart(pieCtx, {
+            type: 'pie',
+            data: {
+                labels: ['RF Baseline', 'SHAP Explanation'],
+                datasets: [{
+                    data: [energyData.baseline, energyData.shap],
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.8)',
+                        'rgba(34, 197, 94, 0.8)'
+                    ],
+                    borderColor: [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(34, 197, 94, 1)'
+                    ],
+                    borderWidth: 3
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                const percentage = ((context.parsed / (energyData.baseline + energyData.shap)) * 100).toFixed(1);
+                                return context.label + ': ' + context.parsed.toFixed(5) + ' kWh (' + percentage + '%)';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Stacked Bar Chart for Component Breakdown
+        const stackedCtx = document.getElementById('stackedBarChart').getContext('2d');
+        const stackedChart = new Chart(stackedCtx, {
+            type: 'bar',
+            data: {
+                labels: ['RF Baseline', 'SHAP Explanation'],
+                datasets: [{
+                    label: 'CPU',
+                    data: [componentData.baseline.cpu, componentData.shap.cpu],
+                    backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    borderWidth: 2
+                }, {
+                    label: 'RAM',
+                    data: [componentData.baseline.ram, componentData.shap.ram],
+                    backgroundColor: 'rgba(34, 197, 94, 0.8)',
+                    borderColor: 'rgba(34, 197, 94, 1)',
+                    borderWidth: 2
+                }, {
+                    label: 'GPU',
+                    data: [componentData.baseline.gpu, componentData.shap.gpu],
+                    backgroundColor: 'rgba(251, 191, 36, 0.8)',
+                    borderColor: 'rgba(251, 191, 36, 1)',
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            usePointStyle: true,
+                            pointStyle: 'circle'
+                        }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: 'white',
+                        bodyColor: 'white',
+                        cornerRadius: 8,
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y.toFixed(5) + ' kWh';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        stacked: true,
+                        grid: {
+                            display: false
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        grid: {
+                            color: 'rgba(0, 0, 0, 0.05)'
+                        },
+                        ticks: {
+                            callback: function(value) {
+                                return value.toFixed(5) + ' kWh';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Initialize with charts tab active
+        document.addEventListener('DOMContentLoaded', function() {
+            switchTab('charts');
+        });
+    </script>
+</body>
+</html>
+{% endblock %}
