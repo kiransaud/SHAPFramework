@@ -1,0 +1,14 @@
+{% extends 'Base.html' %}
+{% load tailwind_filters widget_tweaks %}
+
+{% block content %}
+<div class="container mx-auto mt-8">
+  <h1 class="text-3xl font-bold">Developer Dashboard</h1>
+  <p class="mt-4">
+    Welcome, {{ request.user.get_full_name|default:request.user.username }}.
+    Here you can view detailed SHAP explanations for defect predictions, including code-level metrics and feature contributions.
+  </p>
+  <!-- Additional developer-specific content can go here -->
+  <a href="{% url 'logout' %}" class="mt-4 inline-block text-blue-500">Logout</a>
+</div>
+{% endblock %}

@@ -1,0 +1,664 @@
+{% extends 'Base.html' %}
+
+{% block content %}
+
+<!-- Navigation -->
+<nav class="bg-white border-gray-200 dark:bg-blue-900 w-auto">
+    <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+        <div class="flex items-center space-x-1 rtl:space-x-reverse">
+            <img src="https://avatars.githubusercontent.com/u/60805229?v=4" class="h-8" alt="SHAP-XAI Logo" />
+            <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">SHAP-XAI</span>
+        </div>
+        <button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-default" aria-expanded="false">
+            <span class="sr-only">Open main menu</span>
+            <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+                <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+            </svg>
+        </button>
+        <div class="hidden w-full md:block md:w-auto" id="navbar-default">
+            <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+                <li>
+                    <a href="{% url 'home' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Home</a>
+                </li>
+                <li>
+                    <a href="{% url 'login' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">Login</a>
+                </li>
+                <li>
+                    <a href="{% url 'signup' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">SignUp</a>
+                </li>
+                <li>
+                    <a href="{% url 'training' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">🌿Workflow</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="bg-gradient-to-r from-blue-500 to-indigo-500 dark:from-blue-700 dark:to-indigo-700 py-16">
+    <div class="container mx-auto px-6 text-center">
+        <h1 data-aos="fade-up" class="text-4xl md:text-5xl font-extrabold text-white mb-4">
+            SHAP-XAI Comprehensive Guide
+        </h1>
+        <p data-aos="fade-up" data-aos-delay="200" class="text-xl text-white mb-8">
+            Master explainable AI for software defect prediction with SHAP
+        </p>
+        <div data-aos="fade-up" data-aos-delay="400" class="flex justify-center space-x-4">
+            <a href="#theory" class="bg-white text-blue-700 py-3 px-6 rounded-full font-semibold shadow-lg hover:bg-gray-200 transition duration-300">
+                Learn Theory
+            </a>
+            <a href="#applications" class="border-2 border-white text-white py-3 px-6 rounded-full font-semibold hover:bg-white hover:text-blue-700 transition duration-300">
+                See Applications
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Table of Contents -->
+<section class="py-12 bg-gray-50 dark:bg-gray-800">
+    <div class="container mx-auto px-6">
+        <h2 class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8">Guide Contents</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <a href="#theory" class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300 transform hover:scale-105">
+                <div class="text-blue-600 text-3xl mb-4">📚</div>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Theory & Foundations</h3>
+                <p class="text-gray-600 dark:text-gray-300 text-sm">Game theory, Shapley values, and mathematical foundations</p>
+            </a>
+            <a href="#applications" class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300 transform hover:scale-105">
+                <div class="text-green-600 text-3xl mb-4">🛠️</div>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Applications</h3>
+                <p class="text-gray-600 dark:text-gray-300 text-sm">Real-world applications in software engineering</p>
+            </a>
+            <a href="#implementation" class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300 transform hover:scale-105">
+                <div class="text-purple-600 text-3xl mb-4">💻</div>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Implementation</h3>
+                <p class="text-gray-600 dark:text-gray-300 text-sm">Practical implementation guides and code examples</p>
+            </a>
+            <a href="#best-practices" class="bg-white dark:bg-gray-700 rounded-lg shadow-lg p-6 hover:shadow-xl transition duration-300 transform hover:scale-105">
+                <div class="text-orange-600 text-3xl mb-4">⭐</div>
+                <h3 class="text-lg font-semibold text-gray-800 dark:text-white mb-2">Best Practices</h3>
+                <p class="text-gray-600 dark:text-gray-300 text-sm">Tips, tricks, and best practices for effective use</p>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Theory Section -->
+<section id="theory" class="py-16 bg-white dark:bg-gray-900">
+    <div class="container mx-auto px-6">
+        <h2 data-aos="fade-up" class="text-4xl font-bold text-center text-gray-800 dark:text-white mb-12">
+            The Science Behind <span class="text-blue-600">SHAP</span>
+        </h2>
+
+        <!-- Game Theory Foundation -->
+        <div class="mb-16">
+            <div data-aos="fade-right" class="bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-blue-900 dark:to-indigo-900 rounded-2xl p-8">
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-6">
+                        <span class="text-white text-2xl">🎮</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Game Theory Foundation</h3>
+                </div>
+                <p class="text-gray-700 dark:text-gray-300 mb-6 leading-relaxed">
+                    SHAP transforms machine learning explanation into a cooperative game where features are players
+                    collaborating to produce predictions. Each feature receives a fair share of credit based on
+                    its marginal contribution across all possible coalitions.
+                </p>
+
+                <div class="bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm rounded-xl p-6">
+                    <h4 class="font-semibold text-indigo-900 dark:text-indigo-300 mb-4 text-lg">Shapley Value Properties:</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div>
+                                <strong class="text-indigo-800 dark:text-indigo-300">Efficiency:</strong>
+                                <span class="text-indigo-700 dark:text-indigo-400 ml-2 block">Sum of SHAP values equals f(x) - E[f(X)]</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div>
+                                <strong class="text-indigo-800 dark:text-indigo-300">Symmetry:</strong>
+                                <span class="text-indigo-700 dark:text-indigo-400 ml-2 block">Equal features receive equal attribution</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div>
+                                <strong class="text-indigo-800 dark:text-indigo-300">Dummy:</strong>
+                                <span class="text-indigo-700 dark:text-indigo-400 ml-2 block">Non-contributing features get zero value</span>
+                            </div>
+                        </div>
+                        <div class="flex items-start space-x-3">
+                            <div class="w-2 h-2 bg-indigo-500 rounded-full mt-2 flex-shrink-0"></div>
+                            <div>
+                                <strong class="text-indigo-800 dark:text-indigo-300">Additivity:</strong>
+                                <span class="text-indigo-700 dark:text-indigo-400 ml-2 block">Consistent across model combinations</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mathematical Foundation -->
+        <div class="mb-16">
+            <div data-aos="fade-left" class="bg-gradient-to-br from-purple-50 to-pink-100 dark:from-purple-900 dark:to-pink-900 rounded-2xl p-8">
+                <div class="flex items-center mb-6">
+                    <div class="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-6">
+                        <span class="text-white text-2xl">📊</span>
+                    </div>
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Mathematical Formulation</h3>
+                </div>
+                <p class="text-gray-700 dark:text-gray-300 mb-6">
+                    The SHAP value for feature i is computed as the weighted average of marginal contributions
+                    across all possible feature coalitions.
+                </p>
+
+                <div class="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 text-center">
+                    <div class="text-2xl font-mono mb-4 text-gray-800 dark:text-gray-200">
+                        φᵢ = Σ<sub>S⊆N\{i}</sub> |S|!(n-|S|-1)!/n! × [f(S∪{i}) - f(S)]
+                    </div>
+                    <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                        <p><strong>S:</strong> Subset of features excluding i</p>
+                        <p><strong>n:</strong> Total number of features</p>
+                        <p><strong>f(S):</strong> Model prediction for subset S</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SHAP Implementations -->
+        <div class="mb-16">
+            <h3 data-aos="fade-up" class="text-3xl font-bold text-center text-gray-800 dark:text-white mb-8">SHAP Implementations</h3>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div data-aos="fade-up" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-red-400">
+                    <div class="flex items-center mb-4">
+                        <span class="text-red-600 text-2xl mr-3">🌳</span>
+                        <h4 class="font-bold text-red-900 dark:text-red-300 text-lg">TreeSHAP</h4>
+                    </div>
+                    <p class="text-red-800 dark:text-red-300 mb-4">Optimized for tree-based models with polynomial time complexity</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs rounded-full">Random Forest</span>
+                        <span class="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs rounded-full">XGBoost</span>
+                        <span class="px-3 py-1 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 text-xs rounded-full">LightGBM</span>
+                    </div>
+                </div>
+
+                <div data-aos="fade-up" data-aos-delay="150" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-blue-400">
+                    <div class="flex items-center mb-4">
+                        <span class="text-blue-600 text-2xl mr-3">🔄</span>
+                        <h4 class="font-bold text-blue-900 dark:text-blue-300 text-lg">KernelSHAP</h4>
+                    </div>
+                    <p class="text-blue-800 dark:text-blue-300 mb-4">Model-agnostic approach using weighted linear regression</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">Neural Networks</span>
+                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">SVM</span>
+                        <span class="px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs rounded-full">Any Model</span>
+                    </div>
+                </div>
+
+                <div data-aos="fade-up" data-aos-delay="300" class="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg border-l-4 border-green-400">
+                    <div class="flex items-center mb-4">
+                        <span class="text-green-600 text-2xl mr-3">📈</span>
+                        <h4 class="font-bold text-green-900 dark:text-green-300 text-lg">LinearSHAP</h4>
+                    </div>
+                    <p class="text-green-800 dark:text-green-300 mb-4">Exact computation for linear models with feature independence</p>
+                    <div class="flex flex-wrap gap-2">
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full">Linear Regression</span>
+                        <span class="px-3 py-1 bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 text-xs rounded-full">Logistic Regression</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Applications Section -->
+<section id="applications" class="py-16 bg-gray-50 dark:bg-gray-800">
+    <div class="container mx-auto px-6">
+        <h2 data-aos="fade-up" class="text-4xl font-bold text-center text-gray-800 dark:text-white mb-12">
+            Real-World <span class="text-green-600">Applications</span>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            <div data-aos="fade-up" class="bg-white dark:bg-gray-700 rounded-2xl p-8 shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105">
+                <div class="w-16 h-16 bg-gradient-to-br from-red-500 to-pink-600 rounded-xl flex items-center justify-center mb-6">
+                    <span class="text-white text-2xl">🐛</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Defect Localization</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                    Identify which specific code metrics and patterns contribute most to defect predictions,
+                    enabling laser-focused code reviews and optimization efforts.
+                </p>
+                <div class="space-y-3">
+                    <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-green-500 mr-2">✅</span>
+                        <span>Pinpoint high-risk code segments</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-green-500 mr-2">✅</span>
+                        <span>Reduce testing effort by 40%</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-green-500 mr-2">✅</span>
+                        <span>Prioritize refactoring decisions</span>
+                    </div>
+                </div>
+            </div>
+
+            <div data-aos="fade-up" data-aos-delay="150" class="bg-white dark:bg-gray-700 rounded-2xl p-8 shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105">
+                <div class="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                    <span class="text-white text-2xl">🔗</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Cross-Project Insights</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                    Analyze defect patterns across different software projects to identify universal risk factors
+                    and project-specific characteristics for better knowledge transfer.
+                </p>
+                <div class="space-y-3">
+                    <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-green-500 mr-2">✅</span>
+                        <span>Transfer learning between projects</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-green-500 mr-2">✅</span>
+                        <span>Identify best practices</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-green-500 mr-2">✅</span>
+                        <span>Benchmark quality metrics</span>
+                    </div>
+                </div>
+            </div>
+
+            <div data-aos="fade-up" data-aos-delay="300" class="bg-white dark:bg-gray-700 rounded-2xl p-8 shadow-lg hover:shadow-xl transition duration-300 transform hover:scale-105">
+                <div class="w-16 h-16 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center mb-6">
+                    <span class="text-white text-2xl">⏰</span>
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">Just-in-Time Prediction</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-6 leading-relaxed">
+                    Provide real-time explanations for commit-level defect predictions, helping developers
+                    understand which changes introduce risks before they're merged.
+                </p>
+                <div class="space-y-3">
+                    <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-green-500 mr-2">✅</span>
+                        <span>Immediate feedback on commits</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-green-500 mr-2">✅</span>
+                        <span>Prevent defects before merge</span>
+                    </div>
+                    <div class="flex items-center text-sm text-gray-700 dark:text-gray-300">
+                        <span class="text-green-500 mr-2">✅</span>
+                        <span>Developer education in real-time</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Implementation Section -->
+<section id="implementation" class="py-16 bg-white dark:bg-gray-900">
+    <div class="container mx-auto px-6">
+        <h2 data-aos="fade-up" class="text-4xl font-bold text-center text-gray-800 dark:text-white mb-12">
+            Implementation <span class="text-purple-600">Guide</span>
+        </h2>
+
+        <div class="max-w-4xl mx-auto">
+            <!-- Step 1 -->
+            <div data-aos="fade-right" class="mb-12">
+                <div class="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-900 dark:to-indigo-900 rounded-2xl p-8">
+                    <div class="flex items-center mb-6">
+                        <span class="bg-purple-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">1</span>
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Install SHAP Library</h3>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-4 mb-4">
+                        <code class="text-green-400 font-mono">pip install shap</code>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300">Install the SHAP library and its dependencies for your Python environment.</p>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div data-aos="fade-left" class="mb-12">
+                <div class="bg-gradient-to-r from-blue-50 to-cyan-50 dark:from-blue-900 dark:to-cyan-900 rounded-2xl p-8">
+                    <div class="flex items-center mb-6">
+                        <span class="bg-blue-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">2</span>
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Train Your Model</h3>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-4 mb-4">
+                        <code class="text-green-400 font-mono text-sm">
+                            import xgboost as xgb<br>
+                            model = xgb.XGBClassifier()<br>
+                            model.fit(X_train, y_train)
+                        </code>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300">Train your defect prediction model using your preferred algorithm.</p>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div data-aos="fade-right" class="mb-12">
+                <div class="bg-gradient-to-r from-green-50 to-teal-50 dark:from-green-900 dark:to-teal-900 rounded-2xl p-8">
+                    <div class="flex items-center mb-6">
+                        <span class="bg-green-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">3</span>
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Generate SHAP Explanations</h3>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-4 mb-4">
+                        <code class="text-green-400 font-mono text-sm">
+                            import shap<br>
+                            explainer = shap.TreeExplainer(model)<br>
+                            shap_values = explainer.shap_values(X_test)
+                        </code>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300">Create SHAP explainer and compute explanations for your test data.</p>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div data-aos="fade-left" class="mb-12">
+                <div class="bg-gradient-to-r from-orange-50 to-red-50 dark:from-orange-900 dark:to-red-900 rounded-2xl p-8">
+                    <div class="flex items-center mb-6">
+                        <span class="bg-orange-600 text-white rounded-full w-10 h-10 flex items-center justify-center font-bold text-lg mr-4">4</span>
+                        <h3 class="text-2xl font-bold text-gray-800 dark:text-white">Visualize Results</h3>
+                    </div>
+                    <div class="bg-gray-800 rounded-lg p-4 mb-4">
+                        <code class="text-green-400 font-mono text-sm">
+                            shap.summary_plot(shap_values, X_test)<br>
+                            shap.waterfall_plot(shap_values[0])
+                        </code>
+                    </div>
+                    <p class="text-gray-700 dark:text-gray-300">Create compelling visualizations to communicate insights to stakeholders.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Best Practices Section -->
+<section id="best-practices" class="py-16 bg-gray-50 dark:bg-gray-800">
+    <div class="container mx-auto px-6">
+        <h2 data-aos="fade-up" class="text-4xl font-bold text-center text-gray-800 dark:text-white mb-12">
+            Best <span class="text-orange-600">Practices</span>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto">
+            <!-- Data Quality -->
+            <div data-aos="fade-up" class="bg-white dark:bg-gray-700 rounded-2xl p-8 shadow-lg">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center mr-4">
+                        <span class="text-white text-xl">🎯</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Data Quality First</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <span class="text-orange-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Ensure feature correlation analysis before SHAP computation</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-orange-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Handle missing values appropriately in background data</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-orange-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Use representative background samples (100-1000 instances)</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Computational Efficiency -->
+            <div data-aos="fade-up" data-aos-delay="150" class="bg-white dark:bg-gray-700 rounded-2xl p-8 shadow-lg">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4">
+                        <span class="text-white text-xl">⚡</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Performance Optimization</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <span class="text-blue-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Use TreeSHAP for tree-based models (fastest option)</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-blue-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Limit KernelSHAP samples to 1000-2000 for balance</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-blue-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Cache explainer objects for repeated use</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Interpretation Guidelines -->
+            <div data-aos="fade-up" data-aos-delay="300" class="bg-white dark:bg-gray-700 rounded-2xl p-8 shadow-lg">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-green-500 to-teal-600 rounded-xl flex items-center justify-center mr-4">
+                        <span class="text-white text-xl">📊</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Interpretation Best Practices</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <span class="text-green-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Focus on magnitude and consistency of SHAP values</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-green-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Compare feature importance across multiple instances</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-green-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Validate insights with domain expert knowledge</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Validation Strategies -->
+            <div data-aos="fade-up" data-aos-delay="450" class="bg-white dark:bg-gray-700 rounded-2xl p-8 shadow-lg">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center mr-4">
+                        <span class="text-white text-xl">✅</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-white">Validation & Testing</h3>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex items-start space-x-3">
+                        <span class="text-purple-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Verify additivity property: sum(SHAP) = f(x) - E[f(X)]</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-purple-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Cross-validate explanations on held-out data</p>
+                    </div>
+                    <div class="flex items-start space-x-3">
+                        <span class="text-purple-500 mt-1">•</span>
+                        <p class="text-gray-600 dark:text-gray-300">Compare with permutation importance for sanity check</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Common Pitfalls -->
+        <div class="mt-16 max-w-4xl mx-auto">
+            <h3 data-aos="fade-up" class="text-2xl font-bold text-center text-gray-800 dark:text-white mb-8">
+                ⚠️ Common Pitfalls to Avoid
+            </h3>
+            <div class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <h4 class="font-semibold text-red-800 dark:text-red-300 mb-3">❌ Don't Do</h4>
+                        <ul class="space-y-2 text-red-700 dark:text-red-400">
+                            <li>• Over-interpret single instance explanations</li>
+                            <li>• Ignore feature correlations in explanations</li>
+                            <li>• Use too small background datasets</li>
+                            <li>• Assume causality from SHAP values</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-green-800 dark:text-green-300 mb-3">✅ Do Instead</h4>
+                        <ul class="space-y-2 text-green-700 dark:text-green-400">
+                            <li>• Aggregate explanations across instances</li>
+                            <li>• Analyze feature interactions explicitly</li>
+                            <li>• Use stratified background sampling</li>
+                            <li>• Focus on prediction contribution</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Advanced Techniques Section -->
+<section class="py-16 bg-white dark:bg-gray-900">
+    <div class="container mx-auto px-6">
+        <h2 data-aos="fade-up" class="text-4xl font-bold text-center text-gray-800 dark:text-white mb-12">
+            Advanced <span class="text-indigo-600">Techniques</span>
+        </h2>
+
+        <div class="max-w-6xl mx-auto">
+            <!-- Feature Interaction Analysis -->
+            <div data-aos="fade-right" class="mb-12">
+                <div class="bg-gradient-to-br from-indigo-50 to-purple-100 dark:from-indigo-900 dark:to-purple-900 rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">
+                        🔗 Feature Interaction Analysis
+                    </h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                SHAP provides powerful tools for understanding how features interact to influence predictions.
+                            </p>
+                            <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
+                                <code class="text-sm text-gray-800 dark:text-gray-200">
+                                    # Interaction values<br>
+                                    interaction_values = explainer.shap_interaction_values(X)<br>
+                                    shap.summary_plot(interaction_values, X)
+                                </code>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                                <span class="text-gray-700 dark:text-gray-300">Identify synergistic feature pairs</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                                <span class="text-gray-700 dark:text-gray-300">Discover antagonistic relationships</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2 h-2 bg-indigo-500 rounded-full"></span>
+                                <span class="text-gray-700 dark:text-gray-300">Optimize feature engineering</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clustering SHAP Values -->
+            <div data-aos="fade-left" class="mb-12">
+                <div class="bg-gradient-to-br from-teal-50 to-cyan-100 dark:from-teal-900 dark:to-cyan-900 rounded-2xl p-8">
+                    <h3 class="text-2xl font-bold text-gray-800 dark:text-white mb-6">
+                        🎯 SHAP-based Instance Clustering
+                    </h3>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div>
+                            <p class="text-gray-700 dark:text-gray-300 mb-4">
+                                Cluster instances based on their explanation patterns to discover defect archetypes.
+                            </p>
+                            <div class="bg-white/50 dark:bg-gray-800/50 rounded-lg p-4">
+                                <code class="text-sm text-gray-800 dark:text-gray-200">
+                                    from sklearn.cluster import KMeans<br>
+                                    kmeans = KMeans(n_clusters=5)<br>
+                                    clusters = kmeans.fit_predict(shap_values)
+                                </code>
+                            </div>
+                        </div>
+                        <div class="space-y-4">
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2 h-2 bg-teal-500 rounded-full"></span>
+                                <span class="text-gray-700 dark:text-gray-300">Group similar defect patterns</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2 h-2 bg-teal-500 rounded-full"></span>
+                                <span class="text-gray-700 dark:text-gray-300">Targeted intervention strategies</span>
+                            </div>
+                            <div class="flex items-center space-x-3">
+                                <span class="w-2 h-2 bg-teal-500 rounded-full"></span>
+                                <span class="text-gray-700 dark:text-gray-300">Personalized code review focus</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Resources Section -->
+<section class="py-16 bg-gray-50 dark:bg-gray-800">
+    <div class="container mx-auto px-6">
+        <h2 data-aos="fade-up" class="text-4xl font-bold text-center text-gray-800 dark:text-white mb-12">
+            Additional <span class="text-blue-600">Resources</span>
+        </h2>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div data-aos="fade-up" class="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition duration-300">
+                <div class="text-4xl mb-4">📚</div>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-3">Documentation</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">Official SHAP documentation and API reference</p>
+                <a href="https://shap.readthedocs.io/" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                    Visit Documentation →
+                </a>
+            </div>
+
+            <div data-aos="fade-up" data-aos-delay="150" class="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition duration-300">
+                <div class="text-4xl mb-4">🎓</div>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-3">Research Papers</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">Academic papers on SHAP and explainable AI</p>
+                <a href="https://arxiv.org/abs/1705.07874" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                    Read Original Paper →
+                </a>
+            </div>
+
+            <div data-aos="fade-up" data-aos-delay="300" class="bg-white dark:bg-gray-700 rounded-xl p-6 shadow-lg hover:shadow-xl transition duration-300">
+                <div class="text-4xl mb-4">💻</div>
+                <h3 class="text-xl font-bold text-gray-800 dark:text-white mb-3">Code Examples</h3>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">Jupyter notebooks with practical examples</p>
+                <a href="https://github.com/slundberg/shap" class="text-blue-600 dark:text-blue-400 hover:underline font-medium">
+                    Browse GitHub →
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<footer class="bg-gray-900 text-white py-12">
+    <div class="container mx-auto px-6">
+        <div class="text-center">
+            <div class="flex items-center justify-center mb-6">
+                <img src="https://avatars.githubusercontent.com/u/60805229?v=4" class="h-10 mr-3" alt="SHAP-XAI Logo" />
+                <span class="text-2xl font-bold">SHAP-XAI</span>
+            </div>
+            <p class="text-gray-400 mb-4">
+                Empowering developers with explainable AI for better software quality
+            </p>
+            <div class="flex justify-center space-x-6">
+                <a href="#theory" class="text-gray-400 hover:text-white transition duration-300">Theory</a>
+                <a href="#applications" class="text-gray-400 hover:text-white transition duration-300">Applications</a>
+                <a href="#implementation" class="text-gray-400 hover:text-white transition duration-300">Implementation</a>
+                <a href="#best-practices" class="text-gray-400 hover:text-white transition duration-300">Best Practices</a>
+            </div>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>
+
+{% endblock%}

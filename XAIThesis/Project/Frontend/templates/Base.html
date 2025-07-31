@@ -1,0 +1,28 @@
+
+{% load static tailwind_tags %}
+<html>
+    <head>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css" rel="stylesheet">
+        {% tailwind_css %}
+
+        
+    </head>
+    <body>
+       <div>
+        {% block content %}
+
+        {% endblock %}
+
+         </div>
+
+         <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+<script>
+  AOS.init({
+    duration: 800, // values from 0 to 3000, with step 50ms
+    easing: 'ease-in-out',
+    once: true, // whether animation should happen only once - while scrolling down
+  });
+</script>
+    </body>
+</html>
+

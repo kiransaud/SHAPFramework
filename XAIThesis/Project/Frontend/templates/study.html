@@ -1,0 +1,1746 @@
+{% extends 'Base.html' %}
+{% load tailwind_filters widget_tweaks crispy_forms_tags %}
+{% load static %}
+
+{% block content %}
+<nav class="bg-white border-gray-200 dark:bg-blue-900 w-auto">
+  <div class="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+    <div class="flex items-center space-x-1 rtl:space-x-reverse">
+      <img src="https://avatars.githubusercontent.com/u/60805229?v=4" class="h-8" alt="Flowbite Logo" />
+      <span class="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">SHAP-XAI</span>
+    </div>
+    <button data-collapse-toggle="navbar-default" type="button" class="inline-flex items-center p-2 w-10 h-10 justify-center text-sm text-gray-500 rounded-lg md:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" aria-controls="navbar-default" aria-expanded="false">
+      <span class="sr-only">Open main menu</span>
+      <svg class="w-5 h-5" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 17 14">
+        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 1h15M1 7h15M1 13h15"/>
+      </svg>
+    </button>
+    <div class="hidden w-full md:block md:w-auto" id="navbar-default">
+      <ul class="font-medium flex flex-col p-4 md:p-0 mt-4 border border-gray-100 rounded-lg bg-gray-50 md:flex-row md:space-x-8 rtl:space-x-reverse md:mt-0 md:border-0 md:bg-white dark:bg-gray-800 md:dark:bg-gray-900 dark:border-gray-700">
+        <li>
+          <a href="{% url 'login' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+            Login
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'signup' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+            SignUp
+          </a>
+        </li>
+        <li>
+          <a href="{% url 'training' %}" class="block py-2 px-3 text-gray-900 rounded-sm hover:bg-gray-100 md:hover:bg-transparent md:border-0 md:hover:text-blue-700 md:p-0 dark:text-white md:dark:hover:text-blue-500 dark:hover:bg-gray-700 dark:hover:text-white md:dark:hover:bg-transparent">
+            🌿 Workflow
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<style>
+  /* Common styles */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    color: #333;
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+  .header {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+  .header h1 { color: #2c3e50; font-size: 2.5em; margin-bottom: 10px; font-weight: 700; }
+  .header p { color: #7f8c8d; font-size: 1.2em; line-height: 1.6; }
+  .study-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    display: none;
+  }
+  .study-card.active {
+    display: block;
+    animation: slideIn 0.5s ease-out;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .scenario-header {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 25px;
+  }
+  .scenario-header h2 { font-size: 1.8em; margin-bottom: 10px; }
+  .code-block {
+    background-color: #2b2b2b;
+    color: #f8f8f2;
+    padding: 20px;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    overflow-x: auto;
+    white-space: pre;
+  }
+  .metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+    margin: 25px 0;
+  }
+  .metric-card {
+    background: linear-gradient(135deg, #4facfe, #00f2fe);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  .metric-card h3 { font-size: 1.1em; margin-bottom: 10px; opacity: 0.9; }
+  .metric-card .value { font-size: 2.5em; font-weight: bold; margin-bottom: 5px; }
+  .shap-section {
+    background: #f8f9ff;
+    border: 2px solid #e3e8ff;
+    border-radius: 10px;
+    padding: 25px;
+    margin: 25px 0;
+    display: none; /* toggled by JS */
+  }
+  .shap-header { display: flex; align-items: center; margin-bottom: 20px; }
+  .shap-header h3 { color: #5a67d8; font-size: 1.4em; margin-left: 10px; }
+  .shap-icon {
+    width: 30px;
+    height: 30px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: bold;
+  }
+  .chart-container {
+    background: white;
+    border-radius: 8px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  }
+  .decision-section {
+    background: #fff9e6;
+    border: 2px solid #ffd700;
+    border-radius: 10px;
+    padding: 25px;
+    margin: 25px 0;
+  }
+  .decision-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+  }
+  .decision-option {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+  }
+  .decision-option:hover {
+    border-color: #667eea;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(102, 126, 234, 0.15);
+  }
+  .decision-option.selected {
+    border-color: #667eea;
+    background: #f7faff;
+  }
+  .confidence-slider { margin: 20px 0; }
+  .slider {
+    width: 100%;
+    height: 8px;
+    border-radius: 5px;
+    background: #e2e8f0;
+    outline: none;
+    -webkit-appearance: none;
+  }
+  .slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    cursor: pointer;
+  }
+  .btn {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin: 10px 5px;
+  }
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+  }
+  .btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+  .progress-bar {
+    background: #e2e8f0;
+    height: 8px;
+    border-radius: 4px;
+    margin-bottom: 30px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    height: 100%;
+    transition: width 0.5s ease;
+  }
+  .timer {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    padding: 15px 20px;
+    border-radius: 10px;
+    font-weight: bold;
+    color: #333;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  }
+  .insights-list { list-style: none; padding: 0; }
+  .insights-list li {
+    background: white;
+    margin: 10px 0;
+    padding: 15px;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    display: flex;
+    align-items: center;
+  }
+  .insight-impact {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+    color: white;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.9em;
+    margin-right: 15px;
+    min-width: 80px;
+    text-align: center;
+  }
+  .insight-impact.positive {
+    background: linear-gradient(135deg, #51cf66, #40c057);
+  }
+  .insight-impact.negative {
+    background: linear-gradient(135deg, #ff6b6b, #ee5a52);
+  }
+  @media (max-width: 768px) {
+    .container { padding: 10px; }
+    .header h1 { font-size: 2em; }
+    .metrics-grid { grid-template-columns: 1fr; }
+    .decision-grid { grid-template-columns: 1fr; }
+  }
+</style>
+
+<div class="timer" id="timer">Time: 00:00</div>
+
+<div class="container">
+  <div class="header">
+    <h1>🔍 Software Defect Prediction Study</h1>
+    <p>Help us understand how SHAP explanations affect developer decision-making in defect prediction scenarios</p>
+  </div>
+
+  <div class="progress-bar">
+    <div class="progress-fill" id="progressBar"></div>
+  </div>
+
+  {# ───────────────────────── Scenarios 1 through 6 ───────────────────────── #}
+
+  {# Scenario 1 ─────────────────────────────────────────────────────────────── #}
+  <div class="study-card active" id="scenario1">
+    <div class="scenario-header">
+      <h2>📊 Scenario 1: Critical Module Analysis</h2>
+      <p>
+        A Machine Learning model has flagged a core authentication module as having
+        <strong>high defect probability</strong>. Your team needs to decide on the next course of action.
+      </p>
+    </div>
+
+    <div class="code-block">
+<span style="color: #66d9ef;">class</span> <span style="color: #a6e22e;">AuthManager </span>:
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">__init__</span>(<span style="color: #fd971f;">self</span>):
+        self.session_store = {}
+        self.failed_attempts = defaultdict(int)
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">authenticate_user</span>(<span style="color: #fd971f;">self</span>, username, password):
+        <span style="color: #75715e;"># Check for account lockout</span>
+        <span style="color: #f92672;">if</span> self.failed_attempts[username] >= <span style="color: #ae81ff;">5</span>:
+            <span style="color: #f92672;">return</span> <span style="color: #ae81ff;">False</span>, <span style="color: #e6db74;">"Account locked"</span>
+
+        <span style="color: #75715e;"># Validate user credentials</span>
+        <span style="color: #f92672;">if</span> self.validate_credentials(username, password):
+            self.session_store[username] = generate_session_token()
+            self.failed_attempts[username] = <span style="color: #ae81ff;">0</span>
+            <span style="color: #f92672;">return</span> <span style="color: #ae81ff;">True</span>, <span style="color: #e6db74;">"Success"</span>
+        <span style="color: #f92672;">else</span>:
+            self.failed_attempts[username] += <span style="color: #ae81ff;">1</span>
+            <span style="color: #f92672;">return</span> <span style="color: #ae81ff;">False</span>, <span style="color: #e6db74;">"Invalid credentials"</span>
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">validate_session</span>(<span style="color: #fd971f;">self</span>, token):
+        <span style="color: #f92672;">for</span> user, stored_token <span style="color: #f92672;">in</span> self.session_store.items():
+            <span style="color: #f92672;">if</span> stored_token == token:
+                <span style="color: #f92672;">return</span> <span style="color: #ae81ff;">True</span>, user
+        <span style="color: #f92672;">return</span> <span style="color: #ae81ff;">False</span>, <span style="color: #ae81ff;">None</span>
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>Defect Probability</h3>
+        <div class="value">87%</div>
+        <small>ML Model Prediction</small>
+      </div>
+      <div class="metric-card">
+        <h3>Lines of Code</h3>
+        <div class="value">342</div>
+        <small>Module Size</small>
+      </div>
+      <div class="metric-card">
+        <h3>Complexity Score</h3>
+        <div class="value">12.4</div>
+        <small>Cyclomatic Complexity</small>
+      </div>
+      <div class="metric-card">
+        <h3>Last Modified</h3>
+        <div class="value">3</div>
+        <small>Days Ago</small>
+      </div>
+    </div>
+
+    <div class="shap-section" id="shapSection1">
+      <div class="shap-header">
+        <div class="shap-icon">S</div>
+        <h3>SHAP Explainable AI Analysis</h3>
+      </div>
+
+      <div class="explanation-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="local-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">🎯 Local Explanation</h4>
+          <div style="background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #ff6b6b;">
+            <p style="margin-bottom: 10px;"><strong>Why is this module predicted as BUGGY?</strong></p>
+            <p style="font-size: 0.95em; line-height: 1.5; color: #444;">
+              The ML model analyzed this specific AuthManager module and found
+              <strong style="color: #ff6b6b;">high complexity patterns</strong> combined with
+              <strong style="color: #ff6b6b;">insufficient input validation</strong>.
+              The nested conditional logic in authentication flow creates
+              <strong>multiple execution paths</strong> that are difficult to test comprehensively.
+            </p>
+          </div>
+
+          <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #4facfe;">
+            <p style="margin-bottom: 8px;"><strong>Key Risk Factors:</strong></p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.9em;">
+              <li><strong>Cyclomatic Complexity = 12.4</strong> (threshold: 10)</li>
+              <li><strong>Missing bounds checking</strong> on username input</li>
+              <li><strong>State management complexity</strong> in session handling</li>
+              <li><strong>Race condition potential</strong> in failed_attempts tracking</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="waterfall-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">📊 SHAP Waterfall Analysis</h4>
+          <div class="chart-container">
+            <canvas id="waterfallChart1" width="400" height="250"></canvas>
+          </div>
+          <p style="font-size: 0.85em; color: #666; margin-top: 10px; font-style: italic;">
+            Starting from baseline prediction, each feature pushes the probability toward or away from "defect"
+          </p>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h4 style="color: #5a67d8; margin-bottom: 15px;">🔍 Feature Importance Breakdown</h4>
+        <canvas id="shapChart1" width="400" height="200"></canvas>
+      </div>
+
+      <div style="background: #fff9e6; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffd700;">
+        <h4 style="color: #b7791f; margin-bottom: 10px;">🤖 Model's Reasoning Process</h4>
+        <p style="font-size: 0.9em; line-height: 1.5; color: #444;">
+          The defect prediction model learned from 50,000+ code modules and their actual bug histories.
+          For this AuthManager, it identified patterns similar to modules that had
+          <strong>authentication vulnerabilities</strong> and <strong>session management bugs</strong> in production.
+          The model's confidence comes from recognizing the combination of high complexity + security-critical
+          function + insufficient validation.
+        </p>
+      </div>
+
+      <ul class="insights-list">
+        <li>
+          <span class="insight-impact negative">High Risk</span>
+          <span><strong>Nested conditionals</strong> in authentication logic create 8 different execution paths, making comprehensive testing difficult</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">High Risk</span>
+          <span><strong>Dictionary-based session storage</strong> without cleanup mechanism leads to memory leaks over time</span>
+        </li>
+        <li>
+          <span class="insight-impact positive">Lower Risk</span>
+          <span><strong>Recent modifications</strong> indicate active maintenance, but also introduce change-related risk</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>No input sanitization</strong> on username parameter opens potential for injection attacks</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="decision-section">
+      <h3>🎯 Your Decision</h3>
+      <p>Based on the information provided, what action should the development team take?</p>
+
+      <div class="decision-grid">
+        <div class="decision-option" onclick="selectDecision(1, 'immediate')">
+          <h4>🚨 Immediate Code Review</h4>
+          <p>Stop current sprint and conduct thorough manual code review of the entire module</p>
+          <small><strong>Impact:</strong> High effort, immediate results</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(1, 'testing')">
+          <h4>🧪 Enhanced Testing</h4>
+          <p>Add comprehensive unit tests and increase test coverage for this module</p>
+          <small><strong>Impact:</strong> Medium effort, medium-term results</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(1, 'refactor')">
+          <h4>🔄 Scheduled Refactoring</h4>
+          <p>Plan module refactoring in next sprint with focus on complexity reduction</p>
+          <small><strong>Impact:</strong> High effort, long-term results</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(1, 'monitor')">
+          <h4>📊 Monitor & Track</h4>
+          <p>Increase monitoring and logging for this module, defer major changes</p>
+          <small><strong>Impact:</strong> Low effort, preventive approach</small>
+        </div>
+      </div>
+
+      <div class="confidence-slider">
+        <label><strong>How confident are you in this decision?</strong></label>
+        <input
+          type="range"
+          min="1"
+          max="7"
+          value="4"
+          class="slider"
+          id="confidence1"
+          oninput="updateConfidence(1, this.value)"
+        />
+        <div style="display: flex; justify-content: space-between; font-size: 0.9em; color: #666; margin-top: 5px;">
+          <span>Not Confident</span>
+          <span id="confidenceValue1">Somewhat Confident</span>
+          <span>Very Confident</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="nextScenario()" id="nextBtn1" disabled>Continue to Next Scenario</button>
+  </div>
+
+
+  {# Scenario 2 ─────────────────────────────────────────────────────────────── #}
+  <div class="study-card" id="scenario2">
+    <div class="scenario-header">
+      <h2>⚡ Scenario 2: Performance Optimization Module</h2>
+      <p>The ML model has identified a caching module with <strong>moderate defect risk</strong>. Performance issues have been reported by the QA team.</p>
+    </div>
+
+    <div class="code-block">
+<span style="color: #66d9ef;">class</span> <span style="color: #a6e22e;">CacheManager</span>:
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">__init__</span>(<span style="color: #fd971f;">self</span>, max_size=<span style="color: #ae81ff;">1000</span>):
+        self.cache = {}
+        self.access_times = {}
+        self.max_size = max_size
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">get</span>(<span style="color: #fd971f;">self</span>, key):
+        <span style="color: #f92672;">if</span> key <span style="color: #f92672;">in</span> self.cache:
+            self.access_times[key] = time.time()
+            <span style="color: #f92672;">return</span> self.cache[key]
+        <span style="color: #f92672;">return</span> <span style="color: #ae81ff;">None</span>
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">set</span>(<span style="color: #fd971f;">self</span>, key, value):
+        <span style="color: #f92672;">if</span> len(self.cache) >= self.max_size:
+            self._evict_oldest()
+        self.cache[key] = value
+        self.access_times[key] = time.time()
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">_evict_oldest</span>(<span style="color: #fd971f;">self</span>):
+        <span style="color: #75715e;"># O(n) operation - potential performance issue</span>
+        oldest_key = min(
+            self.access_times.keys(),
+            key=<span style="color: #f92672;">lambda</span> k: self.access_times[k]
+        )
+        <span style="color: #f92672;">del</span> self.cache[oldest_key]
+        <span style="color: #f92672;">del</span> self.access_times[oldest_key]
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>Defect Probability</h3>
+        <div class="value">64%</div>
+        <small>ML Model Prediction</small>
+      </div>
+      <div class="metric-card">
+        <h3>Lines of Code</h3>
+        <div class="value">156</div>
+        <small>Module Size</small>
+      </div>
+      <div class="metric-card">
+        <h3>Performance Issues</h3>
+        <div class="value">7</div>
+        <small>Reported This Week</small>
+      </div>
+      <div class="metric-card">
+        <h3>Cache Hit Rate</h3>
+        <div class="value">43%</div>
+        <small>Below Target (&gt;80%)</small>
+      </div>
+    </div>
+
+    <div class="shap-section" id="shapSection2">
+      <div class="shap-header">
+        <div class="shap-icon">S</div>
+        <h3>SHAP Explainable AI Analysis</h3>
+      </div>
+
+      <div class="explanation-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="local-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">🎯 Local Explanation</h4>
+          <div style="background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9500;">
+            <p style="margin-bottom: 10px;"><strong>Why is this module predicted as MODERATELY BUGGY?</strong></p>
+            <p style="font-size: 0.95em; line-height: 1.5; color: #444;">
+              The CacheManager shows <strong style="color: #ff9500;">performance anti-patterns</strong>
+              that typically lead to bugs under high load. The O(n) eviction algorithm
+              and lack of thread safety create conditions where
+              <strong>race conditions and performance degradation</strong> commonly occur.
+            </p>
+          </div>
+
+          <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #4facfe;">
+            <p style="margin-bottom: 8px;"><strong>Performance Risk Indicators:</strong></p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.9em;">
+              <li><strong>Linear search</strong> in eviction (O(n) complexity)</li>
+              <li><strong>No concurrent access protection</strong></li>
+              <li><strong>Memory growth pattern</strong> suggests leaks</li>
+              <li><strong>Cache hit rate: 43%</strong> (poor efficiency)</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="waterfall-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">📊 SHAP Waterfall Analysis</h4>
+          <div class="chart-container">
+            <canvas id="waterfallChart2" width="400" height="250"></canvas>
+          </div>
+          <p style="font-size: 0.85em; color: #666; margin-top: 10px; font-style: italic;">
+            Algorithm efficiency has the strongest negative impact on defect prediction
+          </p>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h4 style="color: #5a67d8; margin-bottom: 15px;">🔍 Feature Importance Breakdown</h4>
+        <canvas id="shapChart2" width="400" height="200"></canvas>
+      </div>
+
+      <div style="background: #fff9e6; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffd700;">
+        <h4 style="color: #b7791f; margin-bottom: 10px;">🤖 Model's Reasoning Process</h4>
+        <p style="font-size: 0.9em; line-height: 1.5; color: #444;">
+          Historical data shows caching modules with <strong>inefficient eviction algorithms</strong>
+          frequently cause production issues when traffic scales. The model recognizes this pattern:
+          small modules with algorithmic inefficiencies often fail under load,
+          leading to <strong>timeout exceptions and memory pressure bugs</strong>.
+        </p>
+      </div>
+
+      <ul class="insights-list">
+        <li>
+          <span class="insight-impact negative">High Risk</span>
+          <span><strong>O(n) eviction algorithm</strong> becomes bottleneck as cache size grows, causing performance degradation</span>
+        </li>
+        <li>
+          <span class="insight-impact positive">Lower Risk</span>
+          <span><strong>Compact module size</strong> (156 LOC) makes debugging and maintenance more manageable</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>No thread synchronization</strong> in multi-threaded environment leads to data corruption</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>Memory usage patterns</strong> suggest potential memory leaks during peak traffic</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="decision-section">
+      <h3>🎯 Your Decision</h3>
+      <p>What's the best approach to address this caching module's issues?</p>
+
+      <div class="decision-grid">
+        <div class="decision-option" onclick="selectDecision(2, 'algorithm')">
+          <h4>🔧 Algorithm Optimization</h4>
+          <p>Implement LRU cache with efficient data structures (O(1) operations)</p>
+          <small><strong>Impact:</strong> Medium effort, high performance gain</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(2, 'replace')">
+          <h4>📦 Replace with Library</h4>
+          <p>Replace custom implementation with proven caching library (Redis/Memcached)</p>
+          <small><strong>Impact:</strong> High effort, highest reliability</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(2, 'incremental')">
+          <h4>🛠️ Incremental Fixes</h4>
+          <p>Add thread safety and fix memory leak, keep current architecture</p>
+          <small><strong>Impact:</strong> Low effort, partial improvement</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(2, 'profiling')">
+          <h4>📈 Performance Profiling</h4>
+          <p>Deep performance analysis before making architectural decisions</p>
+          <small><strong>Impact:</strong> Medium effort, data-driven approach</small>
+        </div>
+      </div>
+
+      <div class="confidence-slider">
+        <label><strong>How confident are you in this decision?</strong></label>
+        <input
+          type="range"
+          min="1"
+          max="7"
+          value="4"
+          class="slider"
+          id="confidence2"
+          oninput="updateConfidence(2, this.value)"
+        />
+        <div style="display: flex; justify-content: space-between; font-size: 0.9em; color: #666; margin-top: 5px;">
+          <span>Not Confident</span>
+          <span id="confidenceValue2">Somewhat Confident</span>
+          <span>Very Confident</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="nextScenario()" id="nextBtn2" disabled>Continue to Next Scenario</button>
+  </div>
+
+
+  {# Scenario 3 ─────────────────────────────────────────────────────────────── #}
+  <div class="study-card" id="scenario3">
+    <div class="scenario-header">
+      <h2>🌐 Scenario 3: API Gateway Module</h2>
+      <p>
+        This API gateway handles all external requests. The model predicts
+        <strong>low-moderate defect risk</strong>, but recent deployment showed increased error rates.
+      </p>
+    </div>
+
+    <div class="code-block">
+<span style="color: #66d9ef;">class</span> <span style="color: #a6e22e;">RequestHandler</span>:
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">__init__</span>(<span style="color: #fd971f;">self</span>):
+        self.rate_limits = defaultdict(
+            <span style="color: #f92672;">lambda</span>: {<span style="color: #e6db74;">'count'</span>: <span style="color: #ae81ff;">0</span>, <span style="color: #e6db74;">'reset'</span>: time.time()}
+        )
+        self.middleware_chain = []
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">handle_request</span>(<span style="color: #fd971f;">self</span>, request):
+        <span style="color: #f92672;">try</span>:
+            <span style="color: #75715e;"># Rate limiting check</span>
+            <span style="color: #f92672;">if</span> <span style="color: #f92672;">not</span> self._check_rate_limit(request.client_ip):
+                <span style="color: #f92672;">return</span> Response(
+                    status=<span style="color: #ae81ff;">429</span>,
+                    body=<span style="color: #e6db74;">"Rate limit exceeded"</span>
+                )
+
+            <span style="color: #75715e;"># Apply middleware chain</span>
+            <span style="color: #f92672;">for</span> middleware <span style="color: #f92672;">in</span> self.middleware_chain:
+                request = middleware.process(request)
+                <span style="color: #f92672;">if</span> request <span style="color: #f92672;">is</span> <span style="color: #ae81ff;">None</span>:
+                    <span style="color: #f92672;">return</span> Response(
+                        status=<span style="color: #ae81ff;">400</span>,
+                        body=<span style="color: #e6db74;">"Bad request"</span>
+                    )
+
+            <span style="color: #75715e;"># Route to appropriate handler</span>
+            handler = self._get_handler(request.path)
+            <span style="color: #f92672;">return</span> handler(request)
+
+        <span style="color: #f92672;">except</span> <span style="color: #a6e22e;">Exception</span> <span style="color: #f92672;">as</span> e:
+            logger.error(<span style="color: #e6db74;">f"Request handling error: {e}"</span>)
+            <span style="color: #f92672;">return</span> Response(
+                status=<span style="color: #ae81ff;">500</span>,
+                body=<span style="color: #e6db74;">"Internal server error"</span>
+            )
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>Defect Probability</h3>
+        <div class="value">52%</div>
+        <small>ML Model Prediction</small>
+      </div>
+      <div class="metric-card">
+        <h3>Error Rate</h3>
+        <div class="value">2.3%</div>
+        <small>↑ from 0.8% last week</small>
+      </div>
+      <div class="metric-card">
+        <h3>Avg Response Time</h3>
+        <div class="value">340ms</div>
+        <small>↑ from 180ms baseline</small>
+      </div>
+      <div class="metric-card">
+        <h3>Daily Requests</h3>
+        <div class="value">2.4M</div>
+        <small>High Traffic Module</small>
+      </div>
+    </div>
+
+    <div class="shap-section" id="shapSection3">
+      <div class="shap-header">
+        <div class="shap-icon">S</div>
+        <h3>SHAP Explainable AI Analysis</h3>
+      </div>
+
+      <div class="explanation-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="local-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">🎯 Local Explanation</h4>
+          <div style="background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #51cf66;">
+            <p style="margin-bottom: 10px;"><strong>Why is this module predicted as LOW-MODERATE risk?</strong></p>
+            <p style="font-size: 0.95em; line-height: 1.5; color: #444;">
+              The RequestHandler has <strong style="color: #51cf66;">good error handling practices</strong>
+              but shows <strong style="color: #ff9500;">scalability concerns</strong>.
+              Recent performance issues correlate with <strong>traffic increases</strong>
+              rather than code defects, suggesting infrastructure rather than logic problems.
+            </p>
+          </div>
+
+          <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #4facfe;">
+            <p style="margin-bottom: 8px;"><strong>Mixed Risk Profile:</strong></p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.9em;">
+              <li><strong>Robust error handling</strong> prevents crashes</li>
+              <li><strong>Rate limiting bottleneck</strong> under high load</li>
+              <li><strong>No middleware timeouts</strong> risk hanging requests</li>
+              <li><strong>Traffic correlation</strong> suggests scaling issue</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="waterfall-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">📊 SHAP Waterfall Analysis</h4>
+          <div class="chart-container">
+            <canvas id="waterfallChart3" width="400" height="250"></canvas>
+          </div>
+          <p style="font-size: 0.85em; color: #666; margin-top: 10px; font-style: italic;">
+            Good error handling reduces defect risk, but performance issues increase it
+          </p>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h4 style="color: #5a67d8; margin-bottom: 15px;">🔍 Feature Importance Breakdown</h4>
+        <canvas id="shapChart3" width="400" height="200"></canvas>
+      </div>
+
+      <div style="background: #fff9e6; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffd700;">
+        <h4 style="color: #b7791f; margin-bottom: 10px;">🤖 Model's Reasoning Process</h4>
+        <p style="font-size: 0.9em; line-height: 1.5; color: #444;">
+          The model recognizes this as an <strong>"infrastructure bottleneck" pattern</strong>
+          rather than pure code defects. API gateways with similar characteristics typically fail due to
+          <strong>resource exhaustion</strong> and <strong>timeout issues</strong> under high load,
+          but have lower rates of logic bugs due to comprehensive error handling.
+        </p>
+      </div>
+
+      <ul class="insights-list">
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>Rate limiting implementation</strong> uses inefficient dictionary lookups for high-traffic scenarios</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>Middleware chain processing</strong> lacks timeout controls for long-running operations</span>
+        </li>
+        <li>
+          <span class="insight-impact positive">Lower Risk</span>
+          <span><strong>Recent error rate increase</strong> correlates with traffic spike, not code defects</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="decision-section">
+      <h3>🎯 Your Decision</h3>
+      <p>How should you address the increased error rates and performance concerns?</p>
+
+      <div class="decision-grid">
+        <div class="decision-option" onclick="selectDecision(3, 'scaling')">
+          <h4>📈 Infrastructure Scaling</h4>
+          <p>Increase server capacity and implement load balancing to handle traffic surge</p>
+          <small><strong>Impact:</strong> Quick deployment, addresses immediate issues</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(3, 'optimization')">
+          <h4>⚡ Code Optimization</h4>
+          <p>Optimize rate limiting algorithm and add middleware timeouts</p>
+          <small><strong>Impact:</strong> Medium effort, long-term performance improvement</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(3, 'monitoring')">
+          <h4>🔍 Enhanced Monitoring</h4>
+          <p>Deploy detailed APM and error tracking to better understand issues</p>
+          <small><strong>Impact:</strong> Low effort, data-driven diagnosis</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(3, 'rollback')">
+          <h4>⏪ Rollback & Investigate</h4>
+          <p>Rollback recent deployment and conduct thorough impact analysis</p>
+          <small><strong>Impact:</strong> Immediate stability, delays feature delivery</small>
+        </div>
+      </div>
+
+      <div class="confidence-slider">
+        <label><strong>How confident are you in this decision?</strong></label>
+        <input
+          type="range"
+          min="1"
+          max="7"
+          value="4"
+          class="slider"
+          id="confidence3"
+          oninput="updateConfidence(3, this.value)"
+        />
+        <div style="display: flex; justify-content: space-between; font-size: 0.9em; color: #666; margin-top: 5px;">
+          <span>Not Confident</span>
+          <span id="confidenceValue3">Somewhat Confident</span>
+          <span>Very Confident</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="nextScenario()" id="nextBtn3" disabled>Continue to Next Scenario</button>
+  </div>
+
+
+  {# Scenario 4 ─────────────────────────────────────────────────────────────── #}
+  <div class="study-card" id="scenario4">
+    <div class="scenario-header">
+      <h2>🔒 Scenario 4: Encryption Module Verification</h2>
+      <p>
+        An ML model indicates the newly developed encryption module has <strong>elevated defect risk</strong>. Stakeholders request a security audit.
+      </p>
+    </div>
+
+    <div class="code-block">
+<span style="color: #66d9ef;">class</span> <span style="color: #a6e22e;">EncryptionHandler</span>:
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">__init__</span>(<span style="color: #fd971f;">self</span>, key):
+        self.key = key
+        self.block_size = <span style="color: #ae81ff;">16</span>
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">encrypt</span>(<span style="color: #fd971f;">self</span>, plaintext):
+        <span style="color: #75715e;"># Uses a simplified AES-like routine</span>
+        padded = self._pad(plaintext)
+        cipher = []
+        <span style="color: #f92672;">for</span> i <span style="color: #f92672;">in</span> range(0, len(padded), self.block_size):
+            block = padded[i:i+self.block_size]
+            cipher.append(self._aes_round(block, self.key))
+        <span style="color: #f92672;">return</span> b''.join(cipher)
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">decrypt</span>(<span style="color: #fd971f;">self</span>, ciphertext):
+        <span style="color: #75715e;"># Reverse of encrypt()</span>
+        blocks = [ciphertext[i:i+self.block_size] for i in range(0, len(ciphertext), self.block_size)]
+        plaintext = b''
+        <span style="color: #f92672;">for</span> block <span style="color: #f92672;">in</span> blocks:
+            plaintext += self._aes_inv_round(block, self.key)
+        <span style="color: #f92672;">return</span> self._unpad(plaintext)
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">_pad</span>(<span style="color: #fd971f;">self</span>, data):
+        <span style="color: #f92672;">pad_len</span> = self.block_size - (len(data) % self.block_size)
+        <span style="color: #f92672;">return</span> data + bytes([pad_len] * pad_len)
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">_unpad</span>(<span style="color: #fd971f;">self</span>, data):
+        <span style="color: #f92672;">pad_len</span> = data[-1]
+        <span style="color: #f92672;">return</span> data[:-pad_len]
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">_aes_round</span>(<span style="color: #fd971f;">self</span>, block, key):
+        <span style="color: #75715e;"># Dummy substitution/permutation</span>
+        <span style="color: #f92672;">return</span> block[::-1]  # reverse bytes as placeholder
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>Defect Probability</h3>
+        <div class="value">78%</div>
+        <small>ML Model Prediction</small>
+      </div>
+      <div class="metric-card">
+        <h3>Lines of Code</h3>
+        <div class="value">220</div>
+        <small>Module Size</small>
+      </div>
+      <div class="metric-card">
+        <h3>Security Warnings</h3>
+        <div class="value">5</div>
+        <small>Detected by Static Analyzer</small>
+      </div>
+      <div class="metric-card">
+        <h3>Test Coverage</h3>
+        <div class="value">45%</div>
+        <small>Below 80% Target</small>
+      </div>
+    </div>
+
+    <div class="shap-section" id="shapSection4">
+      <div class="shap-header">
+        <div class="shap-icon">S</div>
+        <h3>SHAP Explainable AI Analysis</h3>
+      </div>
+
+      <div class="explanation-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="local-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">🎯 Local Explanation</h4>
+          <div style="background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #ff6b6b;">
+            <p style="margin-bottom: 10px;"><strong>Why is this module predicted as HIGH ERROR RISK?</strong></p>
+            <p style="font-size: 0.95em; line-height: 1.5; color: #444;">
+              SHAP highlights <strong style="color: #ff6b6b;">insufficient padding checks</strong> and
+              <strong style="color: #ff6b6b;">weak key handling</strong>. The dummy AES round is
+              recognized as a <strong>potential security anti-pattern</strong>.
+            </p>
+          </div>
+
+          <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #4facfe;">
+            <p style="margin-bottom: 8px;"><strong>Risk Indicators:</strong></p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.9em;">
+              <li><strong>Poor test coverage</strong> on encryption logic</li>
+              <li><strong>No constant‐time checks</strong> for padding</li>
+              <li><strong>Hardcoded key usage</strong> observed</li>
+              <li><strong>Minimal static analyzer warnings</strong> should be higher</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="waterfall-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">📊 SHAP Waterfall Analysis</h4>
+          <div class="chart-container">
+            <canvas id="waterfallChart4" width="400" height="250"></canvas>
+          </div>
+          <p style="font-size: 0.85em; color: #666; margin-top: 10px; font-style: italic;">
+            Padding vulnerabilities and key management drive defect probability upward
+          </p>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h4 style="color: #5a67d8; margin-bottom: 15px;">🔍 Feature Importance Breakdown</h4>
+        <canvas id="shapChart4" width="400" height="200"></canvas>
+      </div>
+
+      <div style="background: #fff9e6; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffd700;">
+        <h4 style="color: #b7791f; margin-bottom: 10px;">🤖 Model's Reasoning Process</h4>
+        <p style="font-size: 0.9em; line-height: 1.5; color: #444;">
+          The model learned from past modules where incorrect padding or key usage led to
+          <strong>serious vulnerabilities</strong>. Encryption code with >50% dynamic checks
+          and <strong>explicit key management</strong> usually fares better.
+        </p>
+      </div>
+
+      <ul class="insights-list">
+        <li>
+          <span class="insight-impact negative">High Risk</span>
+          <span><strong>Hardcoded key</strong> usage makes brute forcing easier</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">High Risk</span>
+          <span><strong>Poor padding validation</strong> can lead to padding oracle attacks</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>Low test coverage</strong> on edge‐cases (45% only)</span>
+        </li>
+        <li>
+          <span class="insight-impact positive">Lower Risk</span>
+          <span><strong>Simple AES‐like structure</strong> is easy to audit, but still risky</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="decision-section">
+      <h3>🎯 Your Decision</h3>
+      <p>Which action best reduces the security risk for this encryption module?</p>
+
+      <div class="decision-grid">
+        <div class="decision-option" onclick="selectDecision(4, 'audit')">
+          <h4>🔍 Conduct Security Audit</h4>
+          <p>Perform a full security audit focusing on padding and key management</p>
+          <small><strong>Impact:</strong> High effort, immediate vulnerability insights</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(4, 'refactor')">
+          <h4>🔄 Refactor Encryption Logic</h4>
+          <p>Replace dummy AES with a proven library (e.g., PyCryptodome)</p>
+          <small><strong>Impact:</strong> High effort, long-term safety</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(4, 'tests')">
+          <h4>🧪 Expand Testing</h4>
+          <p>Increase unit/integration tests on encryption code, simulate edge-case attacks</p>
+          <small><strong>Impact:</strong> Medium effort, improves coverage</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(4, 'monitor')">
+          <h4>📈 Monitor in Production</h4>
+          <p>Deploy runtime instrumentation to catch padding errors and key misuse</p>
+          <small><strong>Impact:</strong> Low upfront effort, slower feedback</small>
+        </div>
+      </div>
+
+      <div class="confidence-slider">
+        <label><strong>How confident are you in this decision?</strong></label>
+        <input
+          type="range"
+          min="1"
+          max="7"
+          value="4"
+          class="slider"
+          id="confidence4"
+          oninput="updateConfidence(4, this.value)"
+        />
+        <div style="display: flex; justify-content: space-between; font-size: 0.9em; color: #666; margin-top: 5px;">
+          <span>Not Confident</span>
+          <span id="confidenceValue4">Somewhat Confident</span>
+          <span>Very Confident</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="nextScenario()" id="nextBtn4" disabled>Continue to Next Scenario</button>
+  </div>
+
+
+  {# Scenario 5 ─────────────────────────────────────────────────────────────── #}
+  <div class="study-card" id="scenario5">
+    <div class="scenario-header">
+      <h2>🔧 Scenario 5: Logging Framework Inspection</h2>
+      <p>
+        The ML model flags the new logging framework as having <strong>moderate risk</strong>.
+        QA discovered dropped logs under high concurrency.
+      </p>
+    </div>
+
+    <div class="code-block">
+<span style="color: #66d9ef;">class</span> <span style="color: #a6e22e;">Logger</span>:
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">__init__</span>(<span style="color: #fd971f;">self</span>, target_file):
+        self.target_file = target_file
+        self.lock = threading.Lock()
+        self.buffer = []
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">log</span>(<span style="color: #fd971f;">self</span>, message):
+        timestamp = datetime.now().isoformat()
+        entry = f"{timestamp} - {message}\n"
+        <span style="color: #f92672;">with</span> self.lock:
+            self.buffer.append(entry)
+            <span style="color: #f92672;">if</span> len(self.buffer) >= <span style="color: #ae81ff;">10</span>:
+                self._flush()
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">_flush</span>(<span style="color: #fd971f;">self</span>):
+        <span style="color: #f92672;">with</span> open(self.target_file, 'a') <span style="color: #f92672;">as</span> f:
+            f.writelines(self.buffer)
+        self.buffer = []
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>Defect Probability</h3>
+        <div class="value">55%</div>
+        <small>ML Model Prediction</small>
+      </div>
+      <div class="metric-card">
+        <h3>Lines of Code</h3>
+        <div class="value">128</div>
+        <small>Module Size</small>
+      </div>
+      <div class="metric-card">
+        <h3>Threads Active</h3>
+        <div class="value">12</div>
+        <small>During Peak Load</small>
+      </div>
+      <div class="metric-card">
+        <h3>Logs Lost</h3>
+        <div class="value">3</div>
+        <small>Instances Reported</small>
+      </div>
+    </div>
+
+    <div class="shap-section" id="shapSection5">
+      <div class="shap-header">
+        <div class="shap-icon">S</div>
+        <h3>SHAP Explainable AI Analysis</h3>
+      </div>
+
+      <div class="explanation-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="local-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">🎯 Local Explanation</h4>
+          <div style="background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9500;">
+            <p style="margin-bottom: 10px;"><strong>Why is this module predicted as MODERATE RISK?</strong></p>
+            <p style="font-size: 0.95em; line-height: 1.5; color: #444;">
+              SHAP points to <strong style="color: #ff9500;">lack of timeout</strong> and
+              <strong style="color: #ff9500;">inefficient buffering</strong> under concurrency.
+              Loss of logs was flagged as the primary driver.
+            </p>
+          </div>
+
+          <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #4facfe;">
+            <p style="margin-bottom: 8px;"><strong>Risk Indicators:</strong></p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.9em;">
+              <li><strong>No timeout</strong> in buffer flush</li>
+              <li><strong>Small buffer size</strong> causes frequent I/O</li>
+              <li><strong>Lock contention</strong> under high thread count</li>
+              <li><strong>Minimal error handling</strong> on write failures</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="waterfall-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">📊 SHAP Waterfall Analysis</h4>
+          <div class="chart-container">
+            <canvas id="waterfallChart5" width="400" height="250"></canvas>
+          </div>
+          <p style="font-size: 0.85em; color: #666; margin-top: 10px; font-style: italic;">
+            Buffer size and lock contention have the strongest impact on lost logs
+          </p>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h4 style="color: #5a67d8; margin-bottom: 15px;">🔍 Feature Importance Breakdown</h4>
+        <canvas id="shapChart5" width="400" height="200"></canvas>
+      </div>
+
+      <div style="background: #fff9e6; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffd700;">
+        <h4 style="color: #b7791f; margin-bottom: 10px;">🤖 Model's Reasoning Process</h4>
+        <p style="font-size: 0.9em; line-height: 1.5; color: #444;">
+          Historical data shows logging modules that drop logs under concurrency usually suffer
+          from <strong>lock contention</strong> and <strong>buffer underutilization</strong>.
+          SHAP flags missing timeouts as a key vulnerability.
+        </p>
+      </div>
+
+      <ul class="insights-list">
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>No timeout on flush</strong> can hang threads indefinitely</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>Small buffer</strong> causes frequent disk writes</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>Lock contention</strong> under 12 concurrent threads</span>
+        </li>
+        <li>
+          <span class="insight-impact positive">Lower Risk</span>
+          <span><strong>Simple design</strong> allows quick patching</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="decision-section">
+      <h3>🎯 Your Decision</h3>
+      <p>Which fix should the team prioritize to reduce lost logs?</p>
+
+      <div class="decision-grid">
+        <div class="decision-option" onclick="selectDecision(5, 'increase_buffer')">
+          <h4>🧱 Increase Buffer Size</h4>
+          <p>Raise buffer threshold from 10 to 50 entries before flush</p>
+          <small><strong>Impact:</strong> Low effort, fewer flushes</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(5, 'timeout_flush')">
+          <h4>⏲️ Add Flush Timeout</h4>
+          <p>Ensure flush runs every 2 seconds even if buffer &lt; 10</p>
+          <small><strong>Impact:</strong> Medium effort, guaranteed writes</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(5, 'async_writes')">
+          <h4>⚡ Async Writes</h4>
+          <p>Spawn a background thread for disk writes to avoid lock blocking</p>
+          <small><strong>Impact:</strong> High effort, better concurrency</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(5, 'rotate_logs')">
+          <h4>🔄 Log Rotation</h4>
+          <p>Rotate log files hourly to reduce file size and I/O latency</p>
+          <small><strong>Impact:</strong> Medium effort, moderate gains</small>
+        </div>
+      </div>
+
+      <div class="confidence-slider">
+        <label><strong>How confident are you in this decision?</strong></label>
+        <input
+          type="range"
+          min="1"
+          max="7"
+          value="4"
+          class="slider"
+          id="confidence5"
+          oninput="updateConfidence(5, this.value)"
+        />
+        <div style="display: flex; justify-content: space-between; font-size: 0.9em; color: #666; margin-top: 5px;">
+          <span>Not Confident</span>
+          <span id="confidenceValue5">Somewhat Confident</span>
+          <span>Very Confident</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="nextScenario()" id="nextBtn5" disabled>Continue to Next Scenario</button>
+  </div>
+
+
+  {# Scenario 6 ─────────────────────────────────────────────────────────────── #}
+  <div class="study-card" id="scenario6">
+    <div class="scenario-header">
+      <h2>🐞 Scenario 6: Payment Processing Module</h2>
+      <p>
+        The ML model flagged the payment gateway code as <strong>high risk</strong>.
+        Recent reports indicate occasional double charges in production.
+      </p>
+    </div>
+
+    <div class="code-block">
+<span style="color: #66d9ef;">class</span> <span style="color: #a6e22e;">PaymentProcessor</span>:
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">__init__</span>(<span style="color: #fd971f;">self</span>, api_client):
+        self.api = api_client
+        self.retry_limit = <span style="color: #ae81ff;">3</span>
+
+    <span style="color: #66d9ef;">def</span> <span style="color: #a6e22e;">process_payment</span>(<span style="color: #fd971f;">self</span>, order_id, amount):
+        attempt = <span style="color: #ae81ff;">0</span>
+        <span style="color: #f92672;">while</span> attempt < self.retry_limit:
+            response = self.api.charge(order_id, amount)
+            <span style="color: #f92672;">if</span> response.status == <span style="color: #ae81ff;">"success"</span>:
+                <span style="color: #f92672;">return</span> True
+            attempt += <span style="color: #ae81ff;">1</span>
+        <span style="color: #f92672;">return</span> False
+    </div>
+
+    <div class="metrics-grid">
+      <div class="metric-card">
+        <h3>Defect Probability</h3>
+        <div class="value">85%</div>
+        <small>ML Model Prediction</small>
+      </div>
+      <div class="metric-card">
+        <h3>Transactions/Hour</h3>
+        <div class="value">1.2K</div>
+        <small>Peak Load</small>
+      </div>
+      <div class="metric-card">
+        <h3>Failure Rate</h3>
+        <div class="value">4.7%</div>
+        <small>↑ from 1.2% last week</small>
+      </div>
+      <div class="metric-card">
+        <h3>Retries</h3>
+        <div class="value">2</div>
+        <small>Average per Transaction</small>
+      </div>
+    </div>
+
+    <div class="shap-section" id="shapSection6">
+      <div class="shap-header">
+        <div class="shap-icon">S</div>
+        <h3>SHAP Explainable AI Analysis</h3>
+      </div>
+
+      <div class="explanation-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+        <div class="local-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">🎯 Local Explanation</h4>
+          <div style="background: #fff; padding: 15px; border-radius: 8px; border-left: 4px solid #ff6b6b;">
+            <p style="margin-bottom: 10px;"><strong>Why is this module predicted as HIGH RISK?</strong></p>
+            <p style="font-size: 0.95em; line-height: 1.5; color: #444;">
+              SHAP highlights <strong style="color: #ff6b6b;">lack of idempotency</strong> and
+              <strong style="color: #ff6b6b;">no transaction locking</strong>.
+              Double charges occur because the same order can be retried multiple times.
+            </p>
+          </div>
+
+          <div style="background: #f0f8ff; padding: 15px; border-radius: 8px; margin-top: 10px; border-left: 4px solid #4facfe;">
+            <p style="margin-bottom: 8px;"><strong>Risk Indicators:</strong></p>
+            <ul style="margin: 0; padding-left: 20px; font-size: 0.9em;">
+              <li><strong>No unique transaction ID</strong> for each charge</li>
+              <li><strong>Retry loop</strong> without verifying prior success</li>
+              <li><strong>API client error handling</strong> is minimal</li>
+              <li><strong>High failure rate</strong> (4.7%) during peak load</li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="waterfall-explanation">
+          <h4 style="color: #5a67d8; margin-bottom: 15px;">📊 SHAP Waterfall Analysis</h4>
+          <div class="chart-container">
+            <canvas id="waterfallChart6" width="400" height="250"></canvas>
+          </div>
+          <p style="font-size: 0.85em; color: #666; margin-top: 10px; font-style: italic;">
+            Lack of idempotency and high failure rate push defect probability upward
+          </p>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <h4 style="color: #5a67d8; margin-bottom: 15px;">🔍 Feature Importance Breakdown</h4>
+        <canvas id="shapChart6" width="400" height="200"></canvas>
+      </div>
+
+      <div style="background: #fff9e6; padding: 15px; border-radius: 8px; margin-top: 15px; border-left: 4px solid #ffd700;">
+        <h4 style="color: #b7791f; margin-bottom: 10px;">🤖 Model's Reasoning Process</h4>
+        <p style="font-size: 0.9em; line-height: 1.5; color: #444;">
+          The model learned from previous payment modules where double‐charge bugs had high business impact.
+          SHAP flags “lack of idempotency” as a major red flag.
+        </p>
+      </div>
+
+      <ul class="insights-list">
+        <li>
+          <span class="insight-impact negative">High Risk</span>
+          <span><strong>No unique transaction ID</strong> leads to re‐charges on retries</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">High Risk</span>
+          <span><strong>Insufficient error handling</strong> if API times out</span>
+        </li>
+        <li>
+          <span class="insight-impact negative">Medium Risk</span>
+          <span><strong>High failure rate</strong> (4.7%) under load</span>
+        </li>
+        <li>
+          <span class="insight-impact positive">Lower Risk</span>
+          <span><strong>Retry logic</strong> is present but needs idempotency guard</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="decision-section">
+      <h3>🎯 Your Decision</h3>
+      <p>Which improvement will you prioritize to fix double charging?</p>
+
+      <div class="decision-grid">
+        <div class="decision-option" onclick="selectDecision(6, 'idempotent')">
+          <h4>🆔 Add Idempotency Key</h4>
+          <p>Generate a unique key per order before calling API</p>
+          <small><strong>Impact:</strong> Medium effort, prevents recharges</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(6, 'lock')">
+          <h4>🔒 Transaction Lock</h4>
+          <p>Acquire a database lock per order to ensure single charge</p>
+          <small><strong>Impact:</strong> High effort, strong guarantee</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(6, 'retry_limit')">
+          <h4>⏲️ Reduce Retry Limit</h4>
+          <p>Lower retries from 3 to 1 and log failures for manual review</p>
+          <small><strong>Impact:</strong> Low effort, reduces double attempts</small>
+        </div>
+        <div class="decision-option" onclick="selectDecision(6, 'monitoring')">
+          <h4>📈 Real‐time Monitoring</h4>
+          <p>Alert on “retry >1” in logs and hold transaction for manual check</p>
+          <small><strong>Impact:</strong> Medium effort, slower real‐time fixes</small>
+        </div>
+      </div>
+
+      <div class="confidence-slider">
+        <label><strong>How confident are you in this decision?</strong></label>
+        <input
+          type="range"
+          min="1"
+          max="7"
+          value="4"
+          class="slider"
+          id="confidence6"
+          oninput="updateConfidence(6, this.value)"
+        />
+        <div style="display: flex; justify-content: space-between; font-size: 0.9em; color: #666; margin-top: 5px;">
+          <span>Not Confident</span>
+          <span id="confidenceValue6">Somewhat Confident</span>
+          <span>Very Confident</span>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn" onclick="completeStudy()" id="completeBtn" disabled>Complete Study</button>
+  </div>
+
+
+  {# Completion Screen ─────────────────────────────────────────────────────────── #}
+  <div class="study-card" id="completion" style="text-align: center;">
+    <h2>🎉 Study Complete!</h2>
+    <p style="font-size: 1.2em; margin: 20px 0;">Thank you for participating in our research study.</p>
+    <p>Your responses have been recorded and will contribute to understanding how SHAP explanations affect developer decision-making in software defect prediction.</p>
+
+    <div style="background: #f0f8ff; padding: 20px; border-radius: 10px; margin: 30px 0;">
+      <h3>Your Session Summary</h3>
+      <p><strong>Total Time:</strong> <span id="totalTime"></span></p>
+      <p><strong>Scenarios Completed:</strong> 6/6</p>
+<!--      <p><strong>Condition:</strong> <span id="studyCondition"></span></p>-->
+    </div>
+
+    <button class="btn" onclick="window.location.reload()">Start New Session</button>
+  </div>
+</div>
+
+{# ──────────────────────────────────────────────────────────────────────────────── #}
+{#   Pass session_id and order (A_first/B_first) into JS                             #}
+{# ──────────────────────────────────────────────────────────────────────────────── #}
+<script>
+  const sessionId = {{ session_id }};
+  const order = "{{ order }}";  // "A_first" or "B_first"
+</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+
+<script>
+  // 1) CSRF token helper
+  function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+      const cookies = document.cookie.split(';');
+      for (let i = 0; i < cookies.length; i++) {
+        const cookie = cookies[i].trim();
+        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+          cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+          break;
+        }
+      }
+    }
+    return cookieValue;
+  }
+  const csrftoken = getCookie('csrftoken');
+
+  // 2) studyData scaffolding
+  const studyData = {
+    condition: (order === 'B_first' ? 'SHAP' : 'Baseline'),
+    startTime: Date.now(),
+    currentScenario: 1,
+    decisions: {},
+    confidences: {},
+    scenarioStartTimes: {}
+  };
+
+  // 3) AB/BA helper: returns true if scenario n should show SHAP
+  function isShapScenario(n) {
+    // If A_first: 1–3 = Baseline (false), 4–6 = SHAP (true)
+    // If B_first: 1–3 = SHAP (true), 4–6 = Baseline (false)
+    const firstBlockIsBaseline = (order === 'A_first');
+    if (n <= 3) {
+      return !firstBlockIsBaseline;
+    } else {
+      return firstBlockIsBaseline;
+    }
+  }
+
+  // 4) Expose all six scenarios’ SHAP data and waterfall data on window
+  window.scenarioData = {};
+  window.waterfallData = {};
+
+  window.scenarioData[1] = {
+    labels: ['Code Complexity','Input Validation','Recent Changes','Session Logic','Error Handling','Dependencies'],
+    values: [0.31,-0.28,0.15,-0.22,0.18,-0.14],
+    colors: ['#ff6b6b','#51cf66','#ff6b6b','#51cf66','#ff6b6b','#51cf66']
+  };
+  window.scenarioData[2] = {
+    labels: ['Algorithm Efficiency','Module Size','Thread Safety','Memory Usage','Cache Hit Rate','Error Rate'],
+    values: [0.42,0.18,-0.35,-0.25,0.28,-0.16],
+    colors: ['#ff6b6b','#ff6b6b','#51cf66','#51cf66','#ff6b6b','#51cf66']
+  };
+  window.scenarioData[3] = {
+    labels: ['Traffic Volume','Rate Limiting','Middleware Chain','Error Handling','Response Time','Recent Deploy'],
+    values: [0.25,-0.32,-0.18,0.22,0.28,-0.15],
+    colors: ['#ff6b6b','#51cf66','#51cf66','#ff6b6b','#ff6b6b','#51cf66']
+  };
+  window.scenarioData[4] = {
+    labels: ['Padding Checks','Key Handling','Test Coverage','Static Analysis','Code Complexity','Integration'],
+    values: [-0.22,0.35,-0.18,0.25,-0.15,0.78],
+    colors: ['#ff6b6b','#51cf66','#ff6b6b','#51cf66','#ff6b6b','#51cf66']
+  };
+  window.scenarioData[5] = {
+    labels: ['Buffer Size','Lock Contention','Timeouts','I/O Frequency','Error Handling','Concurrency'],
+    values: [0.32,-0.28,0.18,-0.15,0.22,-0.10],
+    colors: ['#ff6b6b','#ff6b6b','#51cf66','#51cf66','#ff6b6b','#51cf66']
+  };
+  window.scenarioData[6] = {
+    labels: ['Idempotency','Retry Logic','Failure Rate','Transaction Lock','API Latency','Order Validation'],
+    values: [0.42,-0.35,0.25,-0.22,0.18,-0.30],
+    colors: ['#ff6b6b','#51cf66','#ff6b6b','#51cf66','#ff6b6b','#51cf66']
+  };
+
+  window.waterfallData[1] = {
+    labels: ['Baseline','Complexity','Validation','Changes','Session Logic','Final'],
+    values: [0.1,0.31,-0.28,0.15,-0.22,0.87],
+    colors: ['#666','#ff6b6b','#51cf66','#ff6b6b','#51cf66','#333']
+  };
+  window.waterfallData[2] = {
+    labels: ['Baseline','Algorithm','Thread Safety','Memory','Cache Rate','Final'],
+    values: [0.2,0.42,-0.35,-0.25,0.28,0.64],
+    colors: ['#666','#ff6b6b','#51cf66','#51cf66','#ff6b6b','#333']
+  };
+  window.waterfallData[3] = {
+    labels: ['Baseline','Traffic','Rate Limit','Middleware','Response Time','Final'],
+    values: [0.1,0.25,-0.32,-0.18,0.28,0.52],
+    colors: ['#666','#ff6b6b','#51cf66','#51cf66','#ff6b6b','#333']
+  };
+  window.waterfallData[4] = {
+    labels: ['Baseline','Padding','Key Handling','Test Cov','Static Warn','Final'],
+    values: [0.15,0.35,-0.28,-0.18,0.22,0.78],
+    colors: ['#666','#ff6b6b','#51cf66','#51cf66','#ff6b6b','#333']
+  };
+  window.waterfallData[5] = {
+    labels: ['Baseline','Buffer','Lock Cont','Timeouts','I/O Freq','Final'],
+    values: [0.12,0.28,-0.32,0.15,-0.22,0.55],
+    colors: ['#666','#ff6b6b','#51cf66','#51cf66','#ff6b6b','#333']
+  };
+  window.waterfallData[6] = {
+    labels: ['Baseline','Idempotency','Retries','Fail Rate','Lock Use','Final'],
+    values: [0.05,0.42,-0.35,0.25,-0.22,0.85],
+    colors: ['#666','#ff6b6b','#51cf66','#51cf66','#ff6b6b','#333']
+  };
+
+  // 5) Chart.js helper functions
+  function createShapChart(canvasId, data) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: 'SHAP Value',
+          data: data.values,
+          backgroundColor: data.colors,
+          borderColor: data.colors,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: 'Feature Impact on Defect Prediction' }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Features' } },
+          y: {
+            title: { display: true, text: 'SHAP Value (Impact on Prediction)' },
+            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+          }
+        }
+      }
+    });
+  }
+
+  function createWaterfallChart(canvasId, data) {
+    const ctx = document.getElementById(canvasId).getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: data.labels,
+        datasets: [{
+          label: 'Prediction Value',
+          data: data.values,
+          backgroundColor: data.colors,
+          borderColor: data.colors,
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { display: false },
+          title: { display: true, text: 'SHAP Waterfall - How Features Build the Prediction' }
+        },
+        scales: {
+          x: { title: { display: true, text: 'Prediction Steps' } },
+          y: {
+            title: { display: true, text: 'Cumulative Prediction Value' },
+            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+          }
+        }
+      }
+    });
+  }
+
+  // 6) Timer & Progress
+  function startTimer() {
+    setInterval(() => {
+      const elapsed = Date.now() - studyData.startTime;
+      const minutes = Math.floor(elapsed / 60000);
+      const seconds = Math.floor((elapsed % 60000) / 1000);
+      document.getElementById('timer').textContent =
+        `Time: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }, 1000);
+  }
+
+  function updateProgress() {
+    const progress = ((studyData.currentScenario - 1) / 6) * 100;
+    document.getElementById('progressBar').style.width = `${progress}%`;
+  }
+
+  // 7) Decision and Confidence handlers
+  function selectDecision(scenario, decision) {
+    studyData.decisions[scenario] = decision;
+    document.querySelectorAll(`#scenario${scenario} .decision-option`).forEach(opt => {
+      opt.classList.remove('selected');
+    });
+    event.target.closest('.decision-option').classList.add('selected');
+
+    if (scenario < 6) {
+      document.getElementById(`nextBtn${scenario}`).removeAttribute('disabled');
+    } else {
+      document.getElementById('completeBtn').removeAttribute('disabled');
+    }
+  }
+
+  function updateConfidence(scenario, value) {
+    studyData.confidences[scenario] = parseInt(value);
+    const labels = ['Very Low','Low','Somewhat Low','Neutral','Somewhat High','High','Very High'];
+    document.getElementById(`confidenceValue${scenario}`).textContent = labels[value - 1];
+  }
+
+  // 8) POST one scenario’s data to Django
+  function sendResponse(scenarioNumber) {
+    const timeSpent = studyData[`scenario${scenarioNumber}Time`];
+    const payload = {
+      session_id: sessionId,
+      scenario_number: scenarioNumber,
+      decision_key: studyData.decisions[scenarioNumber],
+      confidence: studyData.confidences[scenarioNumber],
+      time_spent_ms: timeSpent
+    };
+
+    return fetch("{% url 'save_response' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken
+      },
+      body: JSON.stringify(payload)
+    })
+    .then(response => {
+      if (!response.ok) {
+        console.error("Failed to save scenario", scenarioNumber, response.statusText);
+      }
+      return response.json();
+    })
+    .then(data => {
+      console.log("Saved scenario", scenarioNumber, data);
+    })
+    .catch(err => console.error("Error saving scenario", scenarioNumber, err));
+  }
+
+  // 9) initializeStudy: show/hide SHAP, build charts, start timer/progress
+  function initializeStudy() {
+    studyData.scenarioStartTimes[1] = Date.now();
+
+    for (let n = 1; n <= 6; n++) {
+      document.getElementById(`shapSection${n}`).style.display = (isShapScenario(n) ? 'block' : 'none');
+    }
+
+    setTimeout(() => {
+      for (let n = 1; n <= 6; n++) {
+        if (isShapScenario(n)) {
+          createShapChart(`shapChart${n}`, window.scenarioData[n]);
+          createWaterfallChart(`waterfallChart${n}`, window.waterfallData[n]);
+        }
+      }
+    }, 100);
+
+    updateProgress();
+    startTimer();
+  }
+
+  // 10) nextScenario & completeStudy
+  function nextScenario() {
+    const sc = studyData.currentScenario;
+    const elapsed = Date.now() - studyData.scenarioStartTimes[sc];
+    studyData[`scenario${sc}Time`] = elapsed;
+
+    sendResponse(sc).then(() => {
+      document.getElementById(`scenario${sc}`).classList.remove('active');
+      studyData.currentScenario++;
+      studyData.scenarioStartTimes[studyData.currentScenario] = Date.now();
+      document.getElementById(`scenario${studyData.currentScenario}`).classList.add('active');
+      updateProgress();
+    });
+  }
+
+  function completeStudy() {
+  const sc = studyData.currentScenario;
+  const elapsed = Date.now() - studyData.scenarioStartTimes[sc];
+  studyData[`scenario${sc}Time`] = elapsed;
+
+  // 1) First, save scenario 6
+  sendResponse(sc).then(() => {
+    // 2) Now compute total_time_ms for the entire session
+    const total_ms = Date.now() - studyData.startTime;
+
+    // 3) POST to complete_session/ so that Django can write completed_at & total_time_ms
+    return fetch("{% url 'complete_session' %}", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": csrftoken
+      },
+      body: JSON.stringify({
+        session_id: sessionId,
+        total_time_ms: total_ms
+      })
+    });
+  })
+  .then(response2 => {
+    if (!response2.ok) {
+      console.error("Failed to mark session complete", response2.statusText);
+    }
+    return response2.json();
+  })
+  .then(data2 => {
+    console.log("Session marked complete:", data2);
+
+    // 4) Finally, show the “Study Complete” UI exactly as before
+    const total = Date.now() - studyData.startTime;
+    const mins  = Math.floor(total / 60000);
+    const secs  = Math.floor((total % 60000) / 1000);
+
+    document.getElementById(`scenario${sc}`).classList.remove('active');
+    document.getElementById('completion').classList.add('active');
+    document.getElementById('totalTime').textContent = `${mins
+      .toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    document.getElementById('studyCondition').textContent = studyData.condition;
+
+    setTimeout(() => {
+      alert('Thank you! Your responses have been recorded successfully.');
+    }, 500);
+  })
+  .catch(err => {
+    console.error("Error during completion step:", err);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initializeStudy);
+
+</script>
+{% endblock %}
